@@ -9,7 +9,8 @@ struct Visit: Codable, Identifiable, Equatable {
     var id = UUID()
     var placeName: String
     var visitDate: Date
-    let coordinate: PlaceCoordinate
+    var coordinate: PlaceCoordinate
+    var address: String? = nil
     var reminderEnabled = false
     var customReminderDate: Date?
 
@@ -20,6 +21,29 @@ struct Trip: Codable, Identifiable {
     var id = UUID()
     var name: String
     var visits: [Visit] = []
+
+    // Optional fields keep previously saved trips readable.
+    var startDate: Date?
+    var endDate: Date?
+    var region: String?
+
+    var travelSummary: String? {
+        var parts = [region].compactMap { $0 }.filter { !$0.isEmpty }
+        if let startDate, let endDate {
+            let calendar = Calendar.current
+            let first = calendar.startOfDay(for: startDate)
+            let last = calendar.startOfDay(for: endDate)
+            let nights = calendar.dateComponents([.day], from: first, to: last).day ?? 0
+            let style = Date.FormatStyle(date: .numeric).locale(Locale(identifier: "ko_KR"))
+            let firstLabel = first.formatted(style)
+            if nights == 0 {
+                parts.append("\(firstLabel) · 당일 여행")
+            } else {
+                parts.append("\(firstLabel) ~ \(last.formatted(style)) · \(nights)박 \(nights + 1)일")
+            }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
 
     var days: [VisitDay] {
         let grouped = Dictionary(grouping: visits) { Calendar.current.startOfDay(for: $0.visitDate) }

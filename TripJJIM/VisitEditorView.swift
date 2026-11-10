@@ -7,12 +7,14 @@ struct VisitEditorView: View {
     @State private var isRequestingPermission = false
     @State private var reminderMessage: String?
 
+    private let region: String?
     private let original: Visit
     private let isNew: Bool
     private let onSave: (Visit) -> Bool
 
-    init(visit: Visit, isNew: Bool, onSave: @escaping (Visit) -> Bool) {
+    init(visit: Visit, isNew: Bool, region: String?, onSave: @escaping (Visit) -> Bool) {
         _visit = State(initialValue: visit)
+        self.region = region
         original = visit
         self.isNew = isNew
         self.onSave = onSave
@@ -24,6 +26,20 @@ struct VisitEditorView: View {
                 Section("장소와 시간") {
                     TextField("장소 이름", text: $visit.placeName)
                         .accessibilityIdentifier("place-name")
+                    if let address = visit.address {
+                        Label(address, systemImage: "mappin")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    NavigationLink {
+                        PlaceSearchView(region: region) { place in
+                            visit.placeName = place.name
+                            visit.coordinate = place.coordinate
+                            visit.address = place.address
+                        }
+                    } label: {
+                        Label(isNew ? "장소 검색" : "장소 변경", systemImage: "magnifyingglass")
+                    }
                     DatePicker("방문 날짜", selection: $visit.visitDate, displayedComponents: .date)
                     DatePicker("방문 시간", selection: $visit.visitDate, displayedComponents: .hourAndMinute)
                 }
@@ -110,8 +126,10 @@ struct VisitEditorView: View {
     private func save() {
         let calendar = Calendar.current
         visit.placeName = cleanName
-        visit.visitDate = calendar.dateInterval(of: .minute, for: visit.visitDate)?.start ?? visit.visitDate
-        if let date = visit.customReminderDate {
+        if isNew || visit.visitDate != original.visitDate {
+            visit.visitDate = calendar.dateInterval(of: .minute, for: visit.visitDate)?.start ?? visit.visitDate
+        }
+        if let date = visit.customReminderDate, isNew || date != original.customReminderDate {
             visit.customReminderDate = calendar.dateInterval(of: .minute, for: date)?.start ?? date
         }
 
