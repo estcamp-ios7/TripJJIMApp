@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		913CD84084274142B0D0F421 /* PlaceSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */; };
+		8FF572239A30426289D362A2 /* TripEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D98DD9467E2437397444A0F /* TripEditorView.swift */; };
 		0D2178503F724437A893267B /* TripJJIMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */; };
 		83FAFBFB4BB08D8866CBACBE /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */; };
 		996864B393DDC3C72282DE5A /* TripStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EE8FD6F4E9016EF389E034 /* TripStore.swift */; };
@@ -31,6 +33,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSearchView.swift; sourceTree = "<group>"; };
+		7D98DD9467E2437397444A0F /* TripEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripEditorView.swift; sourceTree = "<group>"; };
 		21119CCEE8865A9FC7EFF204 /* TripListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripListView.swift; sourceTree = "<group>"; };
 		2862A217D36C27A44B525585 /* TripFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripFlowTests.swift; sourceTree = "<group>"; };
 		28AAD1477D5182D66D4B03B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -82,6 +86,8 @@
 				FF0F5E04EADE6AB188211DE2 /* TripDetailView.swift */,
 				F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */,
 				21119CCEE8865A9FC7EFF204 /* TripListView.swift */,
+				7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */,
+				7D98DD9467E2437397444A0F /* TripEditorView.swift */,
 				D3CC1F5357080412FD752FC7 /* TripMapView.swift */,
 				A1EE8FD6F4E9016EF389E034 /* TripStore.swift */,
 				9680A5301C98501FF919EE51 /* VisitEditorView.swift */,
@@ -211,6 +217,8 @@
 				BAF4ED3235AB20B0FF85A2DF /* TripDetailView.swift in Sources */,
 				0D2178503F724437A893267B /* TripJJIMApp.swift in Sources */,
 				F329952E78F760916A6A6F24 /* TripListView.swift in Sources */,
+				913CD84084274142B0D0F421 /* PlaceSearchView.swift in Sources */,
+				8FF572239A30426289D362A2 /* TripEditorView.swift in Sources */,
 				CEC269CA4EF9C270D7C05F60 /* TripMapView.swift in Sources */,
 				996864B393DDC3C72282DE5A /* TripStore.swift in Sources */,
 				AD284E534C232373159246C8 /* VisitEditorView.swift in Sources */,
