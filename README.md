@@ -12,9 +12,10 @@ TripJJIM
 ## Support version
 - Xcode
 - iOS 
-
+- OpenAI Codex
+- Gemini
 ## Credits
 - [Ned Park](https://africastart.com)
-
+-
 ### License
 Licensed under the [MIT](LICENSE) license.
