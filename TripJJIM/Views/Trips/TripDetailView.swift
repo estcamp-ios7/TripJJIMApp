@@ -32,7 +32,7 @@ struct TripDetailView: View {
                 if let summary = trip.travelSummary {
                     Text(summary)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .readableSecondaryForeground()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal)
                         .padding(.top, 8)
@@ -66,7 +66,7 @@ struct TripDetailView: View {
                 }
             }
             .navigationTitle(trip.name)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -134,12 +134,17 @@ struct TripDetailView: View {
 
     private func defaultMapDay(for trip: Trip) -> Date {
         let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let days = travelDays(for: trip)
+
+        if let currentDay = days.first(where: { calendar.isDate($0, inSameDayAs: today) }) {
+            return currentDay
+        }
+
         if let nextVisit = trip.nextVisit(after: .now) {
             return calendar.startOfDay(for: nextVisit.visitDate)
         }
 
-        let today = calendar.startOfDay(for: .now)
-        let days = travelDays(for: trip)
         return days.first(where: { $0 >= today }) ?? days.last ?? today
     }
 
@@ -202,6 +207,20 @@ struct TripDetailView: View {
         editor = Editor(visit: visit, isNew: true)
     }
 
+    private func dayNumber(for visit: Visit, in trip: Trip) -> Int {
+        let days = travelDays(for: trip)
+        return (days.firstIndex {
+            Calendar.current.isDate($0, inSameDayAs: visit.visitDate)
+        } ?? 0) + 1
+    }
+
+    private func pinNumber(for visit: Visit, in trip: Trip) -> Int {
+        let visits = trip.days.first {
+            Calendar.current.isDate($0.date, inSameDayAs: visit.visitDate)
+        }?.visits ?? []
+        return (visits.firstIndex { $0.id == visit.id } ?? 0) + 1
+    }
+
     private func itinerary(for trip: Trip, on selectedDay: Date) -> some View {
         let visits = trip.days.first {
             Calendar.current.isDate($0.date, inSameDayAs: selectedDay)
@@ -214,23 +233,16 @@ struct TripDetailView: View {
                         Button {
                             showVisit(next)
                         } label: {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Label("다음 목적지", systemImage: "location.fill")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.teal)
-                                Text(next.placeName)
-                                    .font(.title2.bold())
-                                Text("\(next.visitDate.dayLabel) · \(next.visitDate.timeLabel)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.vertical, 8)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            NextDestinationCard(
+                                visit: next,
+                                dayNumber: dayNumber(for: next, in: trip),
+                                pinNumber: pinNumber(for: next, in: trip)
+                            )
                         }
                         .buttonStyle(.plain)
                     } else {
                         Label("다가오는 방문 일정이 없어요", systemImage: "checkmark.circle")
-                            .foregroundStyle(.secondary)
+                            .readableSecondaryForeground()
                     }
                 }
                 .listRowBackground(Color.teal.opacity(0.12))
@@ -261,7 +273,7 @@ struct TripDetailView: View {
                                         Text(visit.placeName).font(.headline)
                                         Text(visit.visitDate.timeLabel)
                                             .font(.subheadline)
-                                            .foregroundStyle(.secondary)
+                                            .readableSecondaryForeground()
                                     }
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -285,6 +297,110 @@ struct TripDetailView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+private struct NextDestinationCard: View {
+    let visit: Visit
+    let dayNumber: Int
+    let pinNumber: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Label("다음 목적지", systemImage: "location.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.teal)
+                    Spacer()
+                    Text("\(pinNumber)")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.teal)
+                        .frame(minWidth: 32, minHeight: 32)
+                        .background(.teal.opacity(0.12), in: Circle())
+                        .accessibilityLabel("\(pinNumber)번째 핀")
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                NextDestinationInfoRow(
+                    title: "\(dayNumber)일차",
+                    systemImage: "calendar"
+                )
+                NextDestinationInfoRow(
+                    title: addressLabel,
+                    systemImage: "mappin.and.ellipse"
+                )
+                NextDestinationInfoRow(
+                    title: reminderLabel,
+                    systemImage: visit.reminderEnabled ? "bell.fill" : "bell.slash"
+                )
+                NextDestinationInfoRow(
+                    title: memoLabel,
+                    systemImage: "note.text",
+                    isEmphasized: true
+                )
+            }
+            .font(.subheadline)
+        }
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var addressLabel: String {
+        guard let address = visit.address?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !address.isEmpty else {
+            return "주소 정보가 없어요"
+        }
+        return address
+    }
+
+    private var memoLabel: String {
+        guard let memo = visit.memo?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !memo.isEmpty else {
+            return "작성한 방문 메모가 없어요"
+        }
+        return memo
+    }
+
+    private var reminderLabel: String {
+        guard visit.reminderEnabled else { return "알림 꺼짐" }
+
+        let preset = visit.selectedReminderPreset
+        guard preset == .custom else {
+            return preset.title
+        }
+        return "직접 설정 · \(dayLabel(for: visit.reminderDate)) \(visit.reminderDate.timeLabel)"
+    }
+
+    private func dayLabel(for date: Date) -> String {
+        date.formatted(
+            .dateTime
+                .month()
+                .day()
+                .weekday(.wide)
+                .locale(Locale(identifier: "ko_KR"))
+        )
+    }
+}
+
+private struct NextDestinationInfoRow: View {
+    let title: String
+    let systemImage: String
+    var isEmphasized = false
+
+    var body: some View {
+        Label {
+            Text(title)
+                .fontWeight(isEmphasized ? .medium : .regular)
+                .foregroundStyle(Color.primary.opacity(isEmphasized ? 1 : 0.78))
+                .lineLimit(isEmphasized ? 3 : 2)
+                .multilineTextAlignment(.leading)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(.teal)
+                .frame(width: 18)
         }
     }
 }
