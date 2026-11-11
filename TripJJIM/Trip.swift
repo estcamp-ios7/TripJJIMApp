@@ -5,6 +5,31 @@ struct PlaceCoordinate: Codable, Equatable {
     let longitude: Double
 }
 
+enum ReminderPreset: String, Codable, CaseIterable, Identifiable {
+    case atVisit, tenMinutesBefore, thirtyMinutesBefore, oneHourBefore, custom
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .atVisit: "방문 시간"
+        case .tenMinutesBefore: "10분 전"
+        case .thirtyMinutesBefore: "30분 전"
+        case .oneHourBefore: "1시간 전"
+        case .custom: "직접 설정"
+        }
+    }
+
+    var secondsBeforeVisit: TimeInterval {
+        switch self {
+        case .atVisit, .custom: 0
+        case .tenMinutesBefore: 600
+        case .thirtyMinutesBefore: 1_800
+        case .oneHourBefore: 3_600
+        }
+    }
+}
+
 struct Visit: Codable, Identifiable, Equatable {
     var id = UUID()
     var placeName: String
@@ -14,7 +39,37 @@ struct Visit: Codable, Identifiable, Equatable {
     var reminderEnabled = false
     var customReminderDate: Date?
 
-    var reminderDate: Date { customReminderDate ?? visitDate }
+    // Optional so JSON saved before presets were introduced still decodes.
+    var reminderPreset: ReminderPreset?
+
+    var selectedReminderPreset: ReminderPreset {
+        get { reminderPreset ?? (customReminderDate == nil ? .atVisit : .custom) }
+        set {
+            if newValue == .custom && customReminderDate == nil {
+                customReminderDate = reminderDate
+            }
+            reminderPreset = newValue
+        }
+    }
+
+    var reminderDate: Date {
+        if selectedReminderPreset == .custom { return customReminderDate ?? visitDate }
+        return visitDate.addingTimeInterval(-selectedReminderPreset.secondsBeforeVisit)
+    }
+
+    var reminderBody: String {
+        switch selectedReminderPreset {
+        case .atVisit: "\(placeName) 방문 시간입니다."
+        case .custom: "\(placeName) 방문 알림입니다."
+        default: "\(placeName) 방문 \(selectedReminderPreset.title)입니다."
+        }
+    }
+
+    func hasPastReminderChange(from original: Visit, now: Date = .now) -> Bool {
+        reminderEnabled && reminderDate <= now &&
+            (!original.reminderEnabled || reminderDate != original.reminderDate ||
+             selectedReminderPreset != original.selectedReminderPreset)
+    }
 }
 
 struct Trip: Codable, Identifiable {

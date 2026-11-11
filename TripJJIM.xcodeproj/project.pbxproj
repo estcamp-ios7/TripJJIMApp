@@ -20,6 +20,7 @@
 		F067EAC04134CAA2D99222BD /* Trip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A1D890C5846A2F808111A /* Trip.swift */; };
 		F329952E78F760916A6A6F24 /* TripListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21119CCEE8865A9FC7EFF204 /* TripListView.swift */; };
 		FB0783FE6855D9FA144F75CD /* TripFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2862A217D36C27A44B525585 /* TripFlowTests.swift */; };
+		A9E89400B28A4663AE9FC001 /* Trip.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 3F8A1D890C5846A2F808111A /* Trip.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -230,6 +231,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB0783FE6855D9FA144F75CD /* TripFlowTests.swift in Sources */,
+				A9E89400B28A4663AE9FC001 /* Trip.swift in Test Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -41,6 +41,7 @@ struct VisitEditorView: View {
                         Label(isNew ? "장소 검색" : "장소 변경", systemImage: "magnifyingglass")
                     }
                     DatePicker("방문 날짜", selection: $visit.visitDate, displayedComponents: .date)
+                        .accessibilityIdentifier("visit-date")
                     DatePicker("방문 시간", selection: $visit.visitDate, displayedComponents: .hourAndMinute)
                 }
                 reminderSection
@@ -79,13 +80,16 @@ struct VisitEditorView: View {
             .disabled(isRequestingPermission)
 
             if visit.reminderEnabled {
-                Toggle("방문 시간에 알림", isOn: Binding(
-                    get: { visit.customReminderDate == nil },
-                    set: { visit.customReminderDate = $0 ? nil : visit.visitDate }
-                ))
-                .accessibilityIdentifier("remind-at-visit-time")
+                Picker("알림 시점", selection: $visit.selectedReminderPreset) {
+                    ForEach(ReminderPreset.allCases) { preset in
+                        Text(preset.title).tag(preset)
+                    }
+                }
+                .pickerStyle(.menu)
+                .accessibilityIdentifier("reminder-preset")
+                .accessibilityValue(visit.selectedReminderPreset.title)
 
-                if visit.customReminderDate != nil {
+                if visit.selectedReminderPreset == .custom {
                     let date = Binding(
                         get: { visit.reminderDate },
                         set: { visit.customReminderDate = $0 }
@@ -95,6 +99,9 @@ struct VisitEditorView: View {
                     DatePicker("알림 시간", selection: date, displayedComponents: .hourAndMinute)
                         .accessibilityIdentifier("reminder-time")
                 }
+
+                LabeledContent("알림 예정", value: "\(visit.reminderDate.dayLabel) \(visit.reminderDate.timeLabel)")
+                    .accessibilityIdentifier("reminder-preview")
             }
         } header: {
             Text("알림")
@@ -133,8 +140,7 @@ struct VisitEditorView: View {
             visit.customReminderDate = calendar.dateInterval(of: .minute, for: date)?.start ?? date
         }
 
-        if visit.reminderEnabled && visit.reminderDate <= .now &&
-            (!original.reminderEnabled || visit.reminderDate != original.reminderDate) {
+        if visit.hasPastReminderChange(from: original) {
             reminderMessage = "알림 날짜와 시간을 현재 시각 이후로 선택해 주세요."
             return
         }
