@@ -62,3 +62,22 @@ git push -u origin fix/location-feedback
 - 충돌이 생기면 작업 브랜치에서 최신 `main`을 합친 뒤 해결합니다. `project.pbxproj`, `Trip.swift`, `TripStore.swift`처럼 함께 수정할 가능성이 높은 파일은 작업 전에 팀에 공유합니다.
 - 병합은 **Squash and merge**로 진행해 `main`에 PR당 커밋 하나를 남깁니다. 병합이 끝난 작업 브랜치는 GitHub에서 삭제합니다.
 - 관광 API 키 같은 비밀값은 팀에서 정한 비공개 설정에 보관합니다. 커밋 전에 `git status`와 `git diff --staged`로 올라갈 파일과 내용을 확인합니다.
+
+## 4. Codex 지침 파일 위치와 확인
+
+팀 공유 문서는 다음과 같이 저장소 루트에 둡니다.
+
+```text
+TripJJIMApp/              # 로컬 저장소 폴더명은 달라도 됩니다.
+├── AGENTS.md             # Codex가 읽는 프로젝트 공통 지침
+├── CONTRIBUTING.md       # 팀 Git 협업 규칙
+├── TripJJIM.xcodeproj/
+└── TripJJIM/
+```
+
+- `~/.codex/AGENTS.md`는 개인 전역 지침입니다. 모든 저장소에 적용할 개인 설정에 사용하고, 이 프로젝트의 팀 규칙은 루트 `AGENTS.md`에서 관리합니다. `CODEX_HOME`을 설정했다면 전역 지침 경로도 그 위치를 따릅니다.
+- 디렉터리별 규칙이 필요할 때만 해당 디렉터리에 `AGENTS.md`를 추가합니다. 같은 디렉터리의 `AGENTS.override.md`는 `AGENTS.md` 대신 선택되므로 사용에 주의합니다.
+- GitHub에 문서를 올리는 것만으로 다른 로컬 폴더에 반영되지는 않습니다. 실제 `TripJJIMApp` 복제본을 최신 상태로 받고 그 폴더를 Codex 프로젝트로 엽니다.
+- 변경 후 새 Codex 실행 또는 새 CLI 세션에서 “현재 적용된 지침 파일 경로와 Git 규칙을 요약해줘”라고 요청해 로딩 결과를 확인합니다. 누락되면 작업 폴더, override 파일, `CODEX_HOME`을 점검합니다.
+
+공식 참고: [Custom instructions with AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
