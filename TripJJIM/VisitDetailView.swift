@@ -40,6 +40,7 @@ struct VisitDetailView: View {
                 Label("\(visit.visitDate.dayLabel) · \(visit.visitDate.timeLabel)", systemImage: "calendar")
                     .foregroundStyle(.secondary)
                 Label(reminderLabel(for: visit), systemImage: visit.reminderEnabled ? "bell" : "bell.slash")
+                    .accessibilityIdentifier("visit-detail-reminder")
             }
             Section("방문 메모") {
                 if let memo = visit.memo, !memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -100,8 +101,8 @@ struct VisitDetailView: View {
 
     private func reminderLabel(for visit: Visit) -> String {
         guard visit.reminderEnabled else { return "알림 꺼짐" }
-        guard let date = visit.customReminderDate else { return "방문 시간에 알림" }
-        return "알림 · \(date.dayLabel) \(date.timeLabel)"
+        let date = visit.reminderDate
+        return "\(date.dayLabel) \(date.timeLabel)"
     }
 }
 

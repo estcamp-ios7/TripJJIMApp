@@ -143,6 +143,10 @@ final class TripFlowTests: XCTestCase {
         for preset in ["30분 전", "1시간 전", "방문 시간", "10분 전"] {
             selectPreset(preset, in: app)
             app.buttons["저장"].tap()
+            let summary = app.descendants(matching: .any).matching(identifier: "visit-detail-reminder").firstMatch
+            XCTAssertTrue(summary.waitForExistence(timeout: 5))
+            XCTAssertFalse(summary.label.contains(preset), summary.label)
+            XCTAssertTrue(summary.label.contains(":"), summary.label)
             editVisit(place, in: app)
         }
         // Cancel a draft change and check the stored preset survives.
@@ -180,6 +184,9 @@ final class TripFlowTests: XCTestCase {
         app.swipeUp()
         tapSwitch("visit-reminder", in: app)
         app.buttons["저장"].tap()
+        let disabledSummary = app.descendants(matching: .any).matching(identifier: "visit-detail-reminder").firstMatch
+        XCTAssertTrue(disabledSummary.waitForExistence(timeout: 5))
+        XCTAssertTrue(disabledSummary.label.contains("알림 꺼짐"))
 
         editVisit(editedPlace, in: app)
         app.swipeUp()
@@ -187,8 +194,9 @@ final class TripFlowTests: XCTestCase {
         app.buttons["저장"].tap()
 
         let row = app.buttons["visit-row-\(editedPlace)"]
-        row.press(forDuration: 0.9)
-        app.buttons["일정 삭제"].tap()
+        let delete = app.buttons["일정 삭제"]
+        if !delete.isHittable { app.swipeUp() }
+        delete.tap()
         app.alerts.buttons["삭제"].tap()
         XCTAssertFalse(row.exists)
 
@@ -276,9 +284,11 @@ final class TripFlowTests: XCTestCase {
     }
 
     private func editVisit(_ name: String, in app: XCUIApplication) {
-        let row = app.buttons["visit-row-\(name)"]
-        XCTAssertTrue(row.waitForExistence(timeout: 5))
-        row.tap()
+        if !app.navigationBars["방문 일정 상세"].exists {
+            let row = app.buttons["visit-row-\(name)"]
+            XCTAssertTrue(row.waitForExistence(timeout: 5))
+            row.tap()
+        }
         let edit = app.buttons["일정 수정"]
         XCTAssertTrue(edit.waitForExistence(timeout: 5))
         edit.tap()
