@@ -44,7 +44,7 @@ final class TripStore {
         }
     }
 
-    func saveTrip(name: String, startDate: Date, endDate: Date, region: String, id: Trip.ID?) throws -> Trip.ID {
+    func saveTrip(name: String, startDate: Date, endDate: Date, region: String, id: Trip.ID?, regionLocation: TripRegionLocation? = nil) throws -> Trip.ID {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let region = region.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { throw TripEditError.missingName }
@@ -78,6 +78,11 @@ final class TripStore {
         updated[index].name = name
         updated[index].startDate = first
         updated[index].endDate = last
+        if let regionLocation {
+            updated[index].regionLocation = regionLocation
+        } else if updated[index].region != region {
+            updated[index].regionLocation = nil
+        }
         updated[index].region = region
         guard persist(updated) else { throw TripEditError.storage }
         return updated[index].id

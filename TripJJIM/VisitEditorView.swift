@@ -9,14 +9,16 @@ struct VisitEditorView: View {
     @State private var memo: String
 
     private let region: String?
+    private let tripRegionLocation: TripRegionLocation?
     private let original: Visit
     private let isNew: Bool
     private let onSave: (Visit) -> Bool
 
-    init(visit: Visit, isNew: Bool, region: String?, onSave: @escaping (Visit) -> Bool) {
+    init(visit: Visit, isNew: Bool, region: String?, tripRegionLocation: TripRegionLocation? = nil, onSave: @escaping (Visit) -> Bool) {
         _visit = State(initialValue: visit)
         _memo = State(initialValue: visit.memo ?? "")
         self.region = region
+        self.tripRegionLocation = tripRegionLocation
         original = visit
         self.isNew = isNew
         self.onSave = onSave
@@ -34,7 +36,7 @@ struct VisitEditorView: View {
                             .foregroundStyle(.secondary)
                     }
                     NavigationLink {
-                        PlaceSearchView(region: region) { place in
+                        PlaceSearchView(region: region, tripRegionLocation: tripRegionLocation) { place in
                             visit.placeName = place.name
                             visit.coordinate = place.coordinate
                             visit.address = place.address
