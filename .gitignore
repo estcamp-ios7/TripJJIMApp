@@ -95,3 +95,5 @@ iOSInjectionProject/
 # for Firebase
 **/GoogleService-Info.plist
 
+# Local Xcode state
+*.xcuserstate
