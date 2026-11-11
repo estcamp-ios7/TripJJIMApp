@@ -35,6 +35,7 @@ struct PlaceSearchView: View {
     @State private var administrativeLookup: AdministrativeRegionSearch?
     @State private var message = "장소 이름이나 주소를 입력해 주세요."
     @State private var loading = false
+    @State private var searchFailed = false
     @State private var searchID = UUID()
     @State private var regionHint: MKCoordinateRegion?
     @State private var activeHint: MKCoordinateRegion?
@@ -59,75 +60,17 @@ struct PlaceSearchView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                TextField("장소 이름 또는 주소", text: $query)
-                    .focused($searchFocused)
-                    .submitLabel(.search)
-                    .onSubmit { search() }
-                if !query.isEmpty {
-                    Button { query = "" } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .frame(minWidth: 44, minHeight: 44)
-                    }
-                    .accessibilityLabel("검색어 지우기")
-                }
-                Button { search() } label: {
-                    Image(systemName: "magnifyingglass")
-                        .frame(minWidth: 44, minHeight: 44)
-                }
-                .accessibilityLabel("검색")
-                .accessibilityIdentifier("place-search-submit")
-                .disabled(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, 14)
-            .padding(.trailing, 4)
-            .frame(minHeight: 52)
-            .background(.background, in: RoundedRectangle(cornerRadius: 12))
-            .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(.secondary.opacity(0.22)) }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
+            TripSearchField(prompt: "장소 이름 또는 주소", query: $query,
+                            focused: $searchFocused, submitID: "place-search-submit",
+                            verticalInset: 8, leadingInset: 8, emphasizesPrompt: true) { search() }
 
-            List {
-                if let label = hintLabel {
-                    Text(label).font(.footnote).foregroundStyle(.secondary)
-                        .listRowBackground(Color.clear)
-                }
-                if loading {
-                    ProgressView(widening ? "다른 지역도 검색 중이에요." : "장소를 검색 중이에요.")
-                        .listRowBackground(Color.clear)
-                } else if !message.isEmpty {
-                    Text(message).foregroundStyle(.secondary)
-                        .listRowBackground(Color.clear)
-                }
-                if !suggestions.isEmpty {
-                    Section("자동완성 제안") {
-                        ForEach(Array(suggestions.enumerated()), id: \.offset) { _, suggestion in
-                            Button { search(completion: suggestion) } label: {
-                                placeRow(suggestion.title, subtitle: suggestion.subtitle)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-                let related = relatedResults
-                let relatedIDs = Set(related.map(\.id))
-                let other = results.filter { !relatedIDs.contains($0.id) }
-                if !related.isEmpty {
-                    resultSection("검색 결과 \(related.count)개", items: related)
-                }
-                if !other.isEmpty {
-                    resultSection("다른 검색 결과 \(other.count)개", items: other)
-                }
-                if canSearchWider {
-                    Button("다른 지역도 검색") { search(wider: true) }
-                        .disabled(loading)
-                }
+            if query.isEmpty && suggestions.isEmpty && results.isEmpty && !loading {
+                initialSearchGuide
+            } else {
+                searchResultsList
             }
-            .listStyle(.insetGrouped)
-            .scrollDismissesKeyboard(.interactively)
         }
+        .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("장소 검색")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -162,6 +105,105 @@ struct PlaceSearchView: View {
         .onDisappear { cancel() }
     }
 
+    private var initialSearchGuide: some View {
+        GeometryReader { space in
+            ScrollView {
+                VStack(spacing: 12) {
+                    Image(systemName: "location.circle")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(.teal)
+                        .frame(width: 64, height: 64)
+                        .background(.teal.opacity(0.12), in: Circle())
+                        .accessibilityHidden(true)
+
+                    Text("어디를 방문할 예정인가요?")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.primary)
+
+                    Text("장소 이름이나 주소를 검색해 여행 일정에 추가해 보세요.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: 264)
+                }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 52)
+                .frame(maxWidth: .infinity, minHeight: space.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+
+    private var searchResultsList: some View {
+        List {
+            if let label = hintLabel {
+                Text(label).font(.footnote).foregroundStyle(.secondary)
+                    .listRowBackground(Color.clear)
+            }
+            if loading {
+                TripSearchStatusRow(title: widening ? "다른 지역도 검색 중이에요." : "장소를 검색 중이에요.",
+                                    isLoading: true)
+            } else if searchFailed {
+                TripSearchStatusRow(title: message, icon: "exclamationmark.circle")
+            } else if !message.isEmpty {
+                if submitted && !widening && relatedResults.isEmpty {
+                    TripSearchStatusRow(title: "검색 결과를 찾지 못했어요.",
+                                        detail: "다른 검색어나 지역명으로 다시 검색해 보세요.")
+                } else {
+                    TripSearchStatusRow(title: message)
+                }
+            }
+            if !suggestions.isEmpty {
+                Section("자동완성 제안") {
+                    ForEach(Array(suggestions.enumerated()), id: \.offset) { _, suggestion in
+                        Button { search(completion: suggestion) } label: {
+                            TripSearchResultRow(title: suggestion.title, subtitle: suggestion.subtitle,
+                                                icon: "magnifyingglass")
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color(uiColor: .systemBackground))
+                    }
+                }
+            }
+            let related = relatedResults
+            let relatedIDs = Set(related.map(\.id))
+            let other = results.filter { !relatedIDs.contains($0.id) }
+            if !related.isEmpty {
+                resultSection("검색 결과 \(related.count)개", items: related)
+            }
+            if !other.isEmpty {
+                resultSection("다른 검색 결과 \(other.count)개", items: other)
+            }
+            if canSearchWider {
+                Button { search(wider: true) } label: {
+                    Label("다른 지역도 검색", systemImage: "globe")
+                        .frame(minHeight: 44)
+                }
+                .disabled(loading)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    #if DEBUG
+    fileprivate static func previewWithResults() -> Self {
+        var view = Self(region: "부산") { _ in }
+        view._query = State(initialValue: "부산역")
+        view._submitted = State(initialValue: true)
+        view._message = State(initialValue: "")
+        view._results = State(initialValue: [
+            PlaceSearchResult(name: "부산역", address: "부산광역시 동구 중앙대로 206",
+                              coordinate: .init(latitude: 35.1151, longitude: 129.0415))
+        ])
+        return view
+    }
+    #endif
+
     private func resultSection(_ title: String, items: [PlaceSearchResult]) -> some View {
         Section(title) {
             ForEach(items) { result in
@@ -169,23 +211,12 @@ struct PlaceSearchView: View {
                     onSelect(result)
                     dismiss()
                 } label: {
-                    placeRow(result.name, subtitle: result.address ?? "주소 정보 없음")
+                    TripSearchResultRow(title: result.name, subtitle: result.address ?? "주소 정보 없음")
                 }
                 .buttonStyle(.plain)
+                .listRowBackground(Color(uiColor: .systemBackground))
             }
         }
-    }
-
-    private func placeRow(_ name: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(name).font(.headline).foregroundStyle(.primary)
-            if !subtitle.isEmpty {
-                Text(subtitle).font(.footnote).foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
     }
 
     private func cancel() {
@@ -198,6 +229,7 @@ struct PlaceSearchView: View {
         completer = nil
         suggestions = []
         loading = false
+        searchFailed = false
     }
 
     private func search(wider: Bool = false, completion: MKLocalSearchCompletion? = nil) {
@@ -283,6 +315,7 @@ struct PlaceSearchView: View {
             } catch {
                 guard searchID == id else { return }
                 canSearchWider = wider && activeHint != nil
+                searchFailed = true
                 message = wider ? "다른 지역을 검색하지 못했어요. 다시 시도해 주세요."
                     : "검색에 실패했어요. 연결을 확인하고 다시 시도해 주세요."
                 let failure = error as NSError
@@ -545,3 +578,139 @@ struct PlaceSearchIntent {
         return unique
     }
 }
+
+struct TripSearchField: View {
+    let prompt: String
+    @Binding var query: String
+    var focused: FocusState<Bool>.Binding
+    let submitID: String
+    var verticalInset: CGFloat = 4
+    var leadingInset: CGFloat = 4
+    var emphasizesPrompt = false
+    let submit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button(action: submit) {
+                Image(systemName: "magnifyingglass")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 48, height: 48)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("검색")
+            .accessibilityIdentifier(submitID)
+            .disabled(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+            TextField(prompt, text: $query,
+                      prompt: emphasizesPrompt ? Text(prompt).foregroundStyle(.secondary) : nil)
+                .focused(focused)
+                .submitLabel(.search)
+                .onSubmit(submit)
+                .frame(minHeight: 48)
+
+            if !query.isEmpty {
+                Button { query = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 48, height: 48)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("검색어 지우기")
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, leadingInset)
+        .padding(.trailing, 4)
+        .padding(.vertical, verticalInset)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(.quaternary.opacity(0.45)) }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 8)
+    }
+}
+
+struct TripSearchResultRow: View {
+    let title: String
+    let subtitle: String?
+    var icon = "mappin.circle.fill"
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.teal)
+                .frame(width: 36, height: 36)
+                .background(.teal.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(3)
+                if let subtitle, !subtitle.isEmpty, subtitle != title {
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, 8)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+    }
+}
+
+struct TripSearchStatusRow: View {
+    let title: String
+    var detail: String? = nil
+    var icon = "magnifyingglass"
+    var isLoading = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            if isLoading {
+                ProgressView().tint(.teal).accessibilityHidden(true)
+            } else {
+                Image(systemName: icon)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.teal)
+                    .accessibilityHidden(true)
+            }
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                if let detail {
+                    Text(detail).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 10)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+    }
+}
+
+#Preview("장소 검색 · 초기 화면") {
+    NavigationStack {
+        PlaceSearchView(region: "부산") { _ in }
+    }
+}
+
+#if DEBUG
+#Preview("장소 검색 · 부산역 결과") {
+    NavigationStack {
+        PlaceSearchView.previewWithResults()
+    }
+}
+#endif

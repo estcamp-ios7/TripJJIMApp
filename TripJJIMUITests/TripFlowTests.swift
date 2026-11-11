@@ -15,12 +15,14 @@ final class TripFlowTests: XCTestCase {
         app.textFields["trip-name"].typeText(trip)
         app.buttons["지도에서 지역 찾기"].tap()
 
-        let search = app.searchFields.firstMatch
+        let search = app.textFields["예: 제주"]
         XCTAssertTrue(search.waitForExistence(timeout: 5))
+        attachScreen("Region search empty", in: app)
         search.tap()
         search.typeText("Seoul")
         let result = app.buttons["trip-region-result-1100000000"]
         XCTAssertTrue(result.waitForExistence(timeout: 5))
+        attachScreen("Official region search result", in: app)
         result.tap()
 
         let field = app.textFields["trip-region"]
@@ -42,12 +44,19 @@ final class TripFlowTests: XCTestCase {
 
         let field = app.textFields["장소 이름 또는 주소"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))
+        let guide = app.staticTexts["어디를 방문할 예정인가요?"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 5))
+        attachScreen("Place search empty", in: app)
         field.tap()
         field.typeText("CU")
+        XCTAssertFalse(guide.exists)
+        if app.staticTexts["자동완성 제안"].waitForExistence(timeout: 4) {
+            attachScreen("Place search suggestions", in: app)
+        }
         XCTAssertTrue(app.buttons["place-search-submit"].isEnabled)
         app.buttons["검색어 지우기"].tap()
         XCTAssertFalse(app.buttons["place-search-submit"].isEnabled)
-        XCTAssertTrue(app.staticTexts["장소 이름이나 주소를 입력해 주세요."].waitForExistence(timeout: 5))
+        XCTAssertTrue(guide.waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["자동완성 제안"].exists)
         XCTAssertFalse(app.buttons["다른 지역도 검색"].exists)
     }
