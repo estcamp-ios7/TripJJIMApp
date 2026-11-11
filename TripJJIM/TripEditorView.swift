@@ -104,34 +104,63 @@ private struct TripRegionSearchView: View {
     @Environment(\.dismiss) private var dismiss
     let onSelect: (RegionSelection) -> Void
     @State private var query = ""
+    @FocusState private var searchFocused: Bool
     @State private var officialResults: [AdministrativeRegion] = []
     @State private var otherResults: [RegionSelection] = []
     @State private var service = AdministrativeRegionSearch()
     @State private var task: Task<Void, Never>?
-    @State private var message = "지역 이름을 입력하고 검색해 주세요."
+    @State private var status: RegionSearchStatus = .ready
     @State private var unresolvedName: String?
     @State private var resolving = false
 
+    private enum RegionSearchStatus {
+        case ready, loading, empty, failure
+    }
+
     var body: some View {
-        List {
-            if resolving {
-                ProgressView("선택한 지역의 지도 위치를 확인하고 있어요.")
-            } else if officialResults.isEmpty && otherResults.isEmpty {
-                Text(message).foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            TripSearchField(prompt: "예: 제주", query: $query,
+                            focused: $searchFocused, submitID: "trip-region-submit", submit: runSearch)
+            List {
+                if resolving {
+                    TripSearchStatusRow(title: "선택한 지역의 지도 위치를 확인하고 있어요.", isLoading: true)
+                } else if officialResults.isEmpty && otherResults.isEmpty {
+                    statusRow
+                }
+                if !officialResults.isEmpty || !otherResults.isEmpty {
+                    Section("검색 결과 \(officialResults.count + otherResults.count)개") {
+                        ForEach(officialResults) { result in
+                            Button { select(result) } label: {
+                                TripSearchResultRow(title: displayTitle(for: result), subtitle: displaySubtitle(for: result))
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color(uiColor: .systemBackground))
+                            .disabled(resolving)
+                            .accessibilityIdentifier("trip-region-result-\(result.id)")
+                        }
+                        ForEach(otherResults, id: \.name) { result in
+                            Button { finish(result) } label: {
+                                TripSearchResultRow(title: result.name, subtitle: result.location?.sourceAddress)
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color(uiColor: .systemBackground))
+                        }
+                    }
+                }
             }
-            ForEach(officialResults) { result in
-                Button { select(result) } label: { row(result.name, subtitle: result.subtitle) }
-                    .disabled(resolving)
-                    .accessibilityIdentifier("trip-region-result-\(result.id)")
-            }
-            ForEach(otherResults, id: \.name) { result in
-                Button { finish(result) } label: { row(result.name, subtitle: result.location?.sourceAddress) }
-            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
         }
+        .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("지역 검색")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "예: 제주")
-        .onSubmit(of: .search, runSearch)
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("닫기") { dismiss() }
+            }
+        }
         .onChange(of: query) { updateQuery() }
         .onDisappear { cancelSearch() }
         .alert("지역의 지도 위치를 확인하지 못했어요", isPresented: Binding(
@@ -145,17 +174,37 @@ private struct TripRegionSearchView: View {
         }
     }
 
-    private func row(_ title: String, subtitle: String?) -> some View {
-        Label {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                if let subtitle, subtitle != title {
-                    Text(subtitle).font(.footnote).foregroundStyle(.secondary)
-                }
-            }
-        } icon: {
-            Image(systemName: "mappin.circle")
+    @ViewBuilder
+    private var statusRow: some View {
+        switch status {
+        case .ready:
+            TripSearchStatusRow(title: "지역 이름을 입력하고 검색해 주세요.", detail: "시·도와 시·군·구 이름을 함께 입력해도 좋아요.")
+        case .loading:
+            TripSearchStatusRow(title: "지역을 검색 중이에요.", isLoading: true)
+        case .empty:
+            TripSearchStatusRow(title: "검색 결과를 찾지 못했어요.", detail: "시·도 이름을 함께 입력해 보세요.")
+        case .failure:
+            TripSearchStatusRow(title: "지역을 검색할 수 없어요.", detail: "연결을 확인하고 다시 검색해 주세요.",
+                                icon: "exclamationmark.circle")
         }
+    }
+
+    private func displayTitle(for result: AdministrativeRegion) -> String {
+        if !result.locality.isEmpty { return result.locality }
+        if result.province == AdministrativeRegion.integratedName, !result.district.isEmpty {
+            return result.district
+        }
+        return result.name
+    }
+
+    private func displaySubtitle(for result: AdministrativeRegion) -> String {
+        if !result.locality.isEmpty {
+            return [result.province, result.district].filter { !$0.isEmpty }.joined(separator: " ")
+        }
+        if result.province == AdministrativeRegion.integratedName, !result.district.isEmpty {
+            return result.district.hasSuffix("구") ? "\(result.province) · \(result.subtitle)" : result.province
+        }
+        return result.subtitle
     }
 
     private func cancelSearch() {
@@ -169,15 +218,16 @@ private struct TripRegionSearchView: View {
         cancelSearch()
         officialResults = AdministrativeRegion.matches(query)
         otherResults = []
-        message = "지역 이름을 입력하고 검색해 주세요."
+        status = .ready
     }
 
     private func runSearch() {
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !term.isEmpty else { return }
+        searchFocused = false
         updateQuery()
         guard officialResults.isEmpty else { return }
-        message = "지역을 검색 중이에요."
+        status = .loading
         task = Task {
             do {
                 let response = try await service.lookup(term)
@@ -195,12 +245,11 @@ private struct TripRegionSearchView: View {
                         otherResults.append(RegionSelection(name: fullName, location: location))
                     }
                 }
-                message = "검색 결과가 없어요. 시·도 이름을 함께 입력해 보세요."
+                status = .empty
             } catch let error as NSError {
                 guard !Task.isCancelled else { return }
-                message = error.domain == MKErrorDomain && error.code == MKError.Code.placemarkNotFound.rawValue
-                    ? "검색 결과가 없어요. 시·도 이름을 함께 입력해 보세요."
-                    : "지역을 검색할 수 없어요. 연결을 확인해 주세요."
+                status = error.domain == MKErrorDomain && error.code == MKError.Code.placemarkNotFound.rawValue
+                    ? .empty : .failure
             }
         }
     }
@@ -219,6 +268,15 @@ private struct TripRegionSearchView: View {
             }
         }
     }
+
+    #if DEBUG
+    static func preview(query: String) -> Self {
+        var view = Self { _ in }
+        view._query = State(initialValue: query)
+        view._officialResults = State(initialValue: AdministrativeRegion.matches(query))
+        return view
+    }
+    #endif
 
     private func finish(_ selection: RegionSelection) {
         onSelect(selection)
