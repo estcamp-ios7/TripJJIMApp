@@ -99,11 +99,11 @@ struct TripDetailView: View {
             }
             .sheet(isPresented: $searchingPlace, onDismiss: openSelectedPlace) {
                 NavigationStack {
-                    PlaceSearchView(region: trip.region, nearby: nearbySearchCoordinate) { pendingPlace = $0 }
+                    PlaceSearchView(region: trip.region, nearby: nearbySearchCoordinate, tripRegionLocation: trip.regionLocation) { pendingPlace = $0 }
                 }
             }
             .sheet(item: $editor) { editor in
-                VisitEditorView(visit: editor.visit, isNew: editor.isNew, region: trip.region) { edited in
+                VisitEditorView(visit: editor.visit, isNew: editor.isNew, region: trip.region, tripRegionLocation: trip.regionLocation) { edited in
                     guard store.saveVisit(edited, in: tripID) else { return false }
                     mapDay = Calendar.current.startOfDay(for: edited.visitDate)
                     return true

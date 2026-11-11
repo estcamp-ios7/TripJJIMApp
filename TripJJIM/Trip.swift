@@ -5,6 +5,15 @@ struct PlaceCoordinate: Codable, Equatable {
     let longitude: Double
 }
 
+struct TripRegionLocation: Codable, Equatable {
+    let coordinate: PlaceCoordinate
+    let sourceName: String?
+    let sourceAddress: String?
+    let latitudeDelta: Double?
+    let longitudeDelta: Double?
+    let boundsCenter: PlaceCoordinate?
+}
+
 enum ReminderPreset: String, Codable, CaseIterable, Identifiable {
     case atVisit, tenMinutesBefore, thirtyMinutesBefore, oneHourBefore, custom
 
@@ -82,6 +91,7 @@ struct Trip: Codable, Identifiable {
     var startDate: Date?
     var endDate: Date?
     var region: String?
+    var regionLocation: TripRegionLocation?
 
     var travelSummary: String? {
         var parts = [region].compactMap { $0 }.filter { !$0.isEmpty }

@@ -20,6 +20,7 @@ struct TripEditorView: View {
     @State private var startDate: Date
     @State private var endDate: Date
     @State private var region: String
+    @State private var regionSelection: RegionSelection?
     @State private var error: String?
     private let tripID: Trip.ID?
     private let onSave: (Trip.ID) -> Void
@@ -32,6 +33,9 @@ struct TripEditorView: View {
         _startDate = State(initialValue: trip?.startDate ?? trip?.days.first?.date ?? today)
         _endDate = State(initialValue: trip?.endDate ?? trip?.days.last?.date ?? today)
         _region = State(initialValue: trip?.region ?? "")
+        if let name = trip?.region, let location = trip?.regionLocation {
+            _regionSelection = State(initialValue: RegionSelection(name: name, location: location))
+        }
     }
 
     var body: some View {
@@ -51,7 +55,10 @@ struct TripEditorView: View {
                     TextField("지역 이름", text: $region)
                         .accessibilityIdentifier("trip-region")
                     NavigationLink {
-                        TripRegionSearchView(region: $region)
+                        TripRegionSearchView { selection in
+                            region = selection.name
+                            regionSelection = selection
+                        }
                     } label: {
                         Label("지도에서 지역 찾기", systemImage: "magnifyingglass")
                     }
@@ -79,7 +86,8 @@ struct TripEditorView: View {
 
     private func save() {
         do {
-            let id = try store.saveTrip(name: name, startDate: startDate, endDate: endDate, region: region, id: tripID)
+            let id = try store.saveTrip(name: name, startDate: startDate, endDate: endDate, region: region, id: tripID,
+                                        regionLocation: regionSelection?.name == region.trimmingCharacters(in: .whitespacesAndNewlines) ? regionSelection?.location : nil)
             onSave(id)
         } catch {
             self.error = error.localizedDescription
@@ -87,72 +95,139 @@ struct TripEditorView: View {
     }
 }
 
+private struct RegionSelection {
+    let name: String
+    let location: TripRegionLocation?
+}
+
 private struct TripRegionSearchView: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var region: String
+    let onSelect: (RegionSelection) -> Void
     @State private var query = ""
-    @State private var results: [Result] = []
-    @State private var search: MKLocalSearch?
+    @State private var officialResults: [AdministrativeRegion] = []
+    @State private var otherResults: [RegionSelection] = []
+    @State private var service = AdministrativeRegionSearch()
+    @State private var task: Task<Void, Never>?
     @State private var message = "지역 이름을 입력하고 검색해 주세요."
-
-    private struct Result: Identifiable {
-        let id = UUID()
-        let name: String
-    }
+    @State private var unresolvedName: String?
+    @State private var resolving = false
 
     var body: some View {
         List {
-            if results.isEmpty { Text(message).foregroundStyle(.secondary) }
-            ForEach(results) { result in
-                Button {
-                    region = result.name
-                    dismiss()
-                } label: {
-                    Label(result.name, systemImage: "mappin.circle")
-                }
+            if resolving {
+                ProgressView("선택한 지역의 지도 위치를 확인하고 있어요.")
+            } else if officialResults.isEmpty && otherResults.isEmpty {
+                Text(message).foregroundStyle(.secondary)
+            }
+            ForEach(officialResults) { result in
+                Button { select(result) } label: { row(result.name, subtitle: result.subtitle) }
+                    .disabled(resolving)
+                    .accessibilityIdentifier("trip-region-result-\(result.id)")
+            }
+            ForEach(otherResults, id: \.name) { result in
+                Button { finish(result) } label: { row(result.name, subtitle: result.location?.sourceAddress) }
             }
         }
         .navigationTitle("지역 검색")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "예: 제주")
         .onSubmit(of: .search, runSearch)
-        .onChange(of: query) {
-            cancelSearch()
-            message = "지역 이름을 입력하고 검색해 주세요."
-        }
+        .onChange(of: query) { updateQuery() }
         .onDisappear { cancelSearch() }
+        .alert("지역의 지도 위치를 확인하지 못했어요", isPresented: Binding(
+            get: { unresolvedName != nil },
+            set: { if !$0 { unresolvedName = nil } }
+        ), presenting: unresolvedName) { name in
+            Button("지역 이름만 선택") { finish(RegionSelection(name: name, location: nil)) }
+            Button("취소", role: .cancel) {}
+        } message: { _ in
+            Text("지역 이름을 저장하거나 다른 검색 결과를 선택할 수 있어요.")
+        }
+    }
+
+    private func row(_ title: String, subtitle: String?) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                if let subtitle, subtitle != title {
+                    Text(subtitle).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+        } icon: {
+            Image(systemName: "mappin.circle")
+        }
     }
 
     private func cancelSearch() {
-        search?.cancel()
-        search = nil
-        results = []
+        task?.cancel()
+        task = nil
+        service.cancel()
+        resolving = false
+    }
+
+    private func updateQuery() {
+        cancelSearch()
+        officialResults = AdministrativeRegion.matches(query)
+        otherResults = []
+        message = "지역 이름을 입력하고 검색해 주세요."
     }
 
     private func runSearch() {
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !term.isEmpty else { return }
-        cancelSearch()
+        updateQuery()
+        guard officialResults.isEmpty else { return }
         message = "지역을 검색 중이에요."
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = term
-        request.resultTypes = .address
-        let operation = MKLocalSearch(request: request)
-        search = operation
-        Task {
+        task = Task {
             do {
-                let response = try await operation.start()
-                guard search === operation else { return }
+                let response = try await service.lookup(term)
+                try Task.checkCancellation()
                 var seen: Set<String> = []
-                results = response.mapItems.compactMap { item in
-                    guard let name = item.name, seen.insert(name).inserted else { return nil }
-                    return Result(name: name)
+                for item in response.mapItems {
+                    guard let address = item.displayAddress,
+                          AdministrativeRegion.key(address).contains(AdministrativeRegion.key(term)) else { continue }
+                    let fullName = address.replacingOccurrences(of: "^대한민국\\s+", with: "", options: .regularExpression)
+                    let official = AdministrativeRegion.matches(fullName)
+                    if !official.isEmpty {
+                        officialResults += official.filter { seen.insert($0.id).inserted }
+                    } else if seen.insert(AdministrativeRegion.key(fullName)).inserted,
+                              let location = TripRegionLocation(item: item, bounds: response.mapItems.count == 1 ? response.boundingRegion : nil) {
+                        otherResults.append(RegionSelection(name: fullName, location: location))
+                    }
                 }
-                message = "검색 결과가 없어요. 다른 이름으로 검색하거나 지역을 직접 입력해 주세요."
-            } catch {
-                guard search === operation else { return }
-                message = "지역을 검색할 수 없어요. 연결을 확인하거나 지역을 직접 입력해 주세요."
+                message = "검색 결과가 없어요. 시·도 이름을 함께 입력해 보세요."
+            } catch let error as NSError {
+                guard !Task.isCancelled else { return }
+                message = error.domain == MKErrorDomain && error.code == MKError.Code.placemarkNotFound.rawValue
+                    ? "검색 결과가 없어요. 시·도 이름을 함께 입력해 보세요."
+                    : "지역을 검색할 수 없어요. 연결을 확인해 주세요."
             }
         }
+    }
+
+    private func select(_ region: AdministrativeRegion) {
+        cancelSearch()
+        resolving = true
+        task = Task {
+            let location = try? await service.resolve(region)
+            guard !Task.isCancelled else { return }
+            resolving = false
+            if let location {
+                finish(RegionSelection(name: region.name, location: location))
+            } else {
+                unresolvedName = region.name
+            }
+        }
+    }
+
+    private func finish(_ selection: RegionSelection) {
+        onSelect(selection)
+        dismiss()
+    }
+}
+
+#Preview("지역 검색") {
+    NavigationStack {
+        TripRegionSearchView { _ in }
     }
 }

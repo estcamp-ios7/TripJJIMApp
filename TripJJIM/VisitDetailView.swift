@@ -15,7 +15,7 @@ struct VisitDetailView: View {
         Group {
             if let trip = store.trip(withID: tripID),
                let visit = trip.visits.first(where: { $0.id == visitID }) {
-                detail(for: visit, region: trip.region)
+                detail(for: visit, region: trip.region, tripRegionLocation: trip.regionLocation)
             } else {
                 ContentUnavailableView("방문 일정을 찾을 수 없어요", systemImage: "calendar")
             }
@@ -24,7 +24,7 @@ struct VisitDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func detail(for visit: Visit, region: String?) -> some View {
+    private func detail(for visit: Visit, region: String?, tripRegionLocation: TripRegionLocation?) -> some View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
@@ -57,7 +57,7 @@ struct VisitDetailView: View {
         }
         .listStyle(.insetGrouped)
         .sheet(item: $editing) { draft in
-            VisitEditorView(visit: draft, isNew: false, region: region) { updated in
+            VisitEditorView(visit: draft, isNew: false, region: region, tripRegionLocation: tripRegionLocation) { updated in
                 guard store.saveVisit(updated, in: tripID) else { return false }
                 onSaved(updated.visitDate)
                 return true

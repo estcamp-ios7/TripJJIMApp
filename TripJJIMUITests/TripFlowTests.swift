@@ -6,6 +6,52 @@ final class TripFlowTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    func testOfficialRegionSelectionSurvivesRelaunch() {
+        let app = XCUIApplication()
+        let trip = "Region trip \(UUID().uuidString.prefix(6))"
+        app.launch()
+        openTripEditor(in: app)
+        app.textFields["trip-name"].tap()
+        app.textFields["trip-name"].typeText(trip)
+        app.buttons["지도에서 지역 찾기"].tap()
+
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("Seoul")
+        let result = app.buttons["trip-region-result-1100000000"]
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        result.tap()
+
+        let field = app.textFields["trip-region"]
+        XCTAssertTrue(field.waitForExistence(timeout: 15))
+        XCTAssertEqual(field.value as? String, "서울특별시")
+        app.buttons["save-trip"].tap()
+        XCTAssertTrue(app.navigationBars[trip].waitForExistence(timeout: 5))
+        app.terminate()
+        app.launch()
+        app.staticTexts[trip].tap()
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "서울특별시")).firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testPlaceSearchKeepsDirectSearchAvailableWhileTyping() {
+        let app = XCUIApplication()
+        app.launch()
+        createTrip("Search trip \(UUID().uuidString.prefix(6))", in: app)
+        app.buttons["장소 검색"].tap()
+
+        let field = app.textFields["장소 이름 또는 주소"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("CU")
+        XCTAssertTrue(app.buttons["place-search-submit"].isEnabled)
+        app.buttons["검색어 지우기"].tap()
+        XCTAssertFalse(app.buttons["place-search-submit"].isEnabled)
+        XCTAssertTrue(app.staticTexts["장소 이름이나 주소를 입력해 주세요."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["자동완성 제안"].exists)
+        XCTAssertFalse(app.buttons["다른 지역도 검색"].exists)
+    }
+
     func testMapPinSurvivesRelaunch() {
         let app = XCUIApplication()
         let trip = "Map trip \(UUID().uuidString.prefix(6))"

@@ -25,6 +25,7 @@ struct TripMapView: View {
     @State private var selectedVisitID: Visit.ID?
     @State private var location = LocationManager()
     @State private var regionSearch: MKLocalSearch?
+    @State private var administrativeSearch: AdministrativeRegionSearch?
     @State private var cachedRegion: String?
     @State private var cachedCenter: PlaceCoordinate?
     @State private var focusID = UUID()
@@ -37,11 +38,12 @@ struct TripMapView: View {
     private struct CameraContext: Equatable {
         let day: Date
         let region: String?
+        let regionLocation: TripRegionLocation?
         let coordinates: [PlaceCoordinate]
     }
 
     private var cameraContext: CameraContext {
-        CameraContext(day: selectedDay, region: trip.region, coordinates: visits.map(\.coordinate))
+        CameraContext(day: selectedDay, region: trip.region, regionLocation: trip.regionLocation, coordinates: visits.map(\.coordinate))
     }
 
     private var selectionBinding: Binding<MapSelection<Visit.ID>?> {
@@ -356,15 +358,38 @@ struct TripMapView: View {
     private func cancelRegionFocus() {
         regionSearch?.cancel()
         regionSearch = nil
+        administrativeSearch?.cancel()
+        administrativeSearch = nil
         focusID = UUID()
     }
 
     private func focusOnTripRegion() {
+        if let location = trip.regionLocation {
+            withAnimation { position = .region(location.mapRegion) }
+            return
+        }
         guard let region = trip.region?.trimmingCharacters(in: .whitespacesAndNewlines),
               !region.isEmpty else {
             moveMap(to: .seoul)
             return
         }
+        let matches = AdministrativeRegion.matches(region)
+        if let entry = matches.first {
+            guard matches.count == 1 else { return }
+            let service = AdministrativeRegionSearch()
+            administrativeSearch = service
+            let requestID = focusID
+            Task {
+                let location = try? await service.resolve(entry)
+                guard administrativeSearch === service, focusID == requestID else { return }
+                administrativeSearch = nil
+                if let location {
+                    withAnimation { position = .region(location.mapRegion) }
+                }
+            }
+            return
+        }
+
         if cachedRegion == region, let cachedCenter {
             showRegion(cachedCenter)
             return

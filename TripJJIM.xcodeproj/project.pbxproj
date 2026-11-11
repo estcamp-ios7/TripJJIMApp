@@ -22,6 +22,8 @@
 		F329952E78F760916A6A6F24 /* TripListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21119CCEE8865A9FC7EFF204 /* TripListView.swift */; };
 		FB0783FE6855D9FA144F75CD /* TripFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2862A217D36C27A44B525585 /* TripFlowTests.swift */; };
 		A9E89400B28A4663AE9FC001 /* Trip.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 3F8A1D890C5846A2F808111A /* Trip.swift */; };
+		D1CFDB2BE9C14F68877610A2 /* AdministrativeRegionSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CFDB2BE9C14F68877610A1 /* AdministrativeRegionSearch.swift */; };
+		D1CFDB2BE9C14F68877610B2 /* KoreanAdministrativeRegions.txt in Resources */ = {isa = PBXBuildFile; fileRef = D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +53,8 @@
 		EA25658194DC931115820E18 /* TripJJIMUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = TripJJIMUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripJJIMApp.swift; sourceTree = "<group>"; };
 		FF0F5E04EADE6AB188211DE2 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
+		D1CFDB2BE9C14F68877610A1 /* AdministrativeRegionSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdministrativeRegionSearch.swift; sourceTree = "<group>"; };
+		D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = KoreanAdministrativeRegions.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +86,8 @@
 		4B3732F29B59D5F6B74D7B80 /* TripJJIM */ = {
 			isa = PBXGroup;
 			children = (
+				D1CFDB2BE9C14F68877610A1 /* AdministrativeRegionSearch.swift */,
+				D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */,
 				28AAD1477D5182D66D4B03B3 /* Assets.xcassets */,
 				B4F245FBF56BEF8C4E184936 /* LocationManager.swift */,
 				75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */,
@@ -204,6 +210,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1CFDB2BE9C14F68877610B2 /* KoreanAdministrativeRegions.txt in Resources */,
 				B1202C7A8238826DC782F5A0 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -219,6 +226,7 @@
 				83FAFBFB4BB08D8866CBACBE /* ReminderScheduler.swift in Sources */,
 				F067EAC04134CAA2D99222BD /* Trip.swift in Sources */,
 				BAF4ED3235AB20B0FF85A2DF /* TripDetailView.swift in Sources */,
+				D1CFDB2BE9C14F68877610A2 /* AdministrativeRegionSearch.swift in Sources */,
 				BAF8C83C8DAB433882875D30 /* VisitDetailView.swift in Sources */,
 				0D2178503F724437A893267B /* TripJJIMApp.swift in Sources */,
 				F329952E78F760916A6A6F24 /* TripListView.swift in Sources */,
