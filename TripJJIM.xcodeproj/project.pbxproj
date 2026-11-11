@@ -86,21 +86,12 @@
 		4B3732F29B59D5F6B74D7B80 /* TripJJIM */ = {
 			isa = PBXGroup;
 			children = (
-				D1CFDB2BE9C14F68877610A1 /* AdministrativeRegionSearch.swift */,
-				D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */,
-				28AAD1477D5182D66D4B03B3 /* Assets.xcassets */,
-				B4F245FBF56BEF8C4E184936 /* LocationManager.swift */,
-				75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */,
-				3F8A1D890C5846A2F808111A /* Trip.swift */,
-				FF0F5E04EADE6AB188211DE2 /* TripDetailView.swift */,
-				A2318464D19743B184F367DF /* VisitDetailView.swift */,
-				F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */,
-				21119CCEE8865A9FC7EFF204 /* TripListView.swift */,
-				7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */,
-				7D98DD9467E2437397444A0F /* TripEditorView.swift */,
-				D3CC1F5357080412FD752FC7 /* TripMapView.swift */,
-				A1EE8FD6F4E9016EF389E034 /* TripStore.swift */,
-				9680A5301C98501FF919EE51 /* VisitEditorView.swift */,
+				EF5529065A8F125C4D5AC467 /* App */,
+				7F59DB11C736665BF1752C8D /* Models */,
+				CF45DED76C7EF03DD78A64B4 /* Stores */,
+				8F9B592ADCFEBC6BD2084FAC /* Views */,
+				4AFB45566BE40C996E9F9D0F /* Services */,
+				22464C725874191A3A250064 /* Resources */,
 			);
 			path = TripJJIM;
 			sourceTree = "<group>";
@@ -120,6 +111,87 @@
 				8811F6A21967BD6F7D61CA10 /* TripJJIM.app */,
 				EA25658194DC931115820E18 /* TripJJIMUITests.xctest */,
 			);
+			sourceTree = "<group>";
+		};
+		EF5529065A8F125C4D5AC467 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		7F59DB11C736665BF1752C8D /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3F8A1D890C5846A2F808111A /* Trip.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		CF45DED76C7EF03DD78A64B4 /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				A1EE8FD6F4E9016EF389E034 /* TripStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		9759A3AA99B75E52A7635541 /* Trips */ = {
+			isa = PBXGroup;
+			children = (
+				21119CCEE8865A9FC7EFF204 /* TripListView.swift */,
+				FF0F5E04EADE6AB188211DE2 /* TripDetailView.swift */,
+				7D98DD9467E2437397444A0F /* TripEditorView.swift */,
+				D3CC1F5357080412FD752FC7 /* TripMapView.swift */,
+			);
+			path = Trips;
+			sourceTree = "<group>";
+		};
+		0DA3A5A82CE155D0C3ACDAD7 /* Visits */ = {
+			isa = PBXGroup;
+			children = (
+				A2318464D19743B184F367DF /* VisitDetailView.swift */,
+				9680A5301C98501FF919EE51 /* VisitEditorView.swift */,
+			);
+			path = Visits;
+			sourceTree = "<group>";
+		};
+		C389AE0A4FB5214B10B08596 /* PlaceSearch */ = {
+			isa = PBXGroup;
+			children = (
+				7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */,
+			);
+			path = PlaceSearch;
+			sourceTree = "<group>";
+		};
+		4AFB45566BE40C996E9F9D0F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B4F245FBF56BEF8C4E184936 /* LocationManager.swift */,
+				75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */,
+				D1CFDB2BE9C14F68877610A1 /* AdministrativeRegionSearch.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		22464C725874191A3A250064 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				28AAD1477D5182D66D4B03B3 /* Assets.xcassets */,
+				D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		8F9B592ADCFEBC6BD2084FAC /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9759A3AA99B75E52A7635541 /* Trips */,
+				0DA3A5A82CE155D0C3ACDAD7 /* Visits */,
+				C389AE0A4FB5214B10B08596 /* PlaceSearch */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

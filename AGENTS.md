@@ -6,7 +6,8 @@
 
 여행·방문 일정을 만들고 지도에서 장소를 선택하며 방문 알림을 설정하는 SwiftUI iOS 앱입니다.
 
-- 앱 코드: `TripJJIM/`
+- 앱 코드: `TripJJIM/` — `App/`(진입점), `Models/`(데이터), `Stores/`(상태·저장), `Views/`(화면), `Services/`(위치·알림·검색), `Resources/`(리소스)
+- 화면: `TripJJIM/Views/` 아래 `Trips/`, `Visits/`, `PlaceSearch/`로 구분합니다.
 - UI 테스트: `TripJJIMUITests/`
 - Xcode 프로젝트: `TripJJIM.xcodeproj`, Scheme: `TripJJIM`
 
