@@ -72,9 +72,6 @@ struct TripMapView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                DatePicker("지도 날짜", selection: $selectedDay, displayedComponents: .date)
-                    .labelsHidden()
-                    .accessibilityLabel("지도 날짜")
                 Spacer()
                 Button(action: { onSearch(nil) }) {
                     Image(systemName: "magnifyingglass")

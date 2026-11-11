@@ -46,8 +46,11 @@ struct TripDetailView: View {
                 .padding(.horizontal)
                 .padding(.vertical, 8)
 
+                let days = travelDays(for: trip)
+                TravelDayTabBar(days: days, selectedDay: selectedDayBinding(for: trip))
+
                 if mode == .itinerary {
-                    itinerary(for: trip)
+                    itinerary(for: trip, on: selectedDay(for: trip))
                 } else {
                     TripMapView(trip: trip, selectedDay: Binding(
                         get: { mapDay ?? defaultMapDay(for: trip) },
@@ -130,7 +133,49 @@ struct TripDetailView: View {
     }
 
     private func defaultMapDay(for trip: Trip) -> Date {
-        Calendar.current.startOfDay(for: trip.nextVisit(after: .now)?.visitDate ?? trip.days.first?.date ?? trip.startDate ?? .now)
+        let calendar = Calendar.current
+        if let nextVisit = trip.nextVisit(after: .now) {
+            return calendar.startOfDay(for: nextVisit.visitDate)
+        }
+
+        let today = calendar.startOfDay(for: .now)
+        let days = travelDays(for: trip)
+        return days.first(where: { $0 >= today }) ?? days.last ?? today
+    }
+
+    private func selectedDay(for trip: Trip) -> Date {
+        let days = travelDays(for: trip)
+        guard let mapDay else { return defaultMapDay(for: trip) }
+        return days.contains(where: { Calendar.current.isDate($0, inSameDayAs: mapDay) })
+            ? Calendar.current.startOfDay(for: mapDay)
+            : defaultMapDay(for: trip)
+    }
+
+    private func selectedDayBinding(for trip: Trip) -> Binding<Date> {
+        Binding(
+            get: { selectedDay(for: trip) },
+            set: { mapDay = Calendar.current.startOfDay(for: $0) }
+        )
+    }
+
+    private func travelDays(for trip: Trip) -> [Date] {
+        let calendar = Calendar.current
+        guard let startDate = trip.startDate, let endDate = trip.endDate else {
+            return trip.days.map(\.date)
+        }
+
+        let first = calendar.startOfDay(for: startDate)
+        let last = calendar.startOfDay(for: endDate)
+        guard first <= last else { return [first] }
+
+        var days: [Date] = []
+        var day = first
+        while day <= last {
+            days.append(day)
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        return days
     }
 
     private func openPlaceSearch(near coordinate: PlaceCoordinate?) {
@@ -157,20 +202,13 @@ struct TripDetailView: View {
         editor = Editor(visit: visit, isNew: true)
     }
 
-    private func itinerary(for trip: Trip) -> some View {
-        List {
-            if trip.visits.isEmpty {
-                ContentUnavailableView {
-                    Label("아직 방문 일정이 없어요", systemImage: "calendar")
-                } description: {
-                    Text("지도에서 가고 싶은 장소를 찜해 보세요.")
-                } actions: {
-                    Button("지도에서 장소 추가") { mode = .map }
-                        .buttonStyle(.borderedProminent)
-                }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-            } else {
+    private func itinerary(for trip: Trip, on selectedDay: Date) -> some View {
+        let visits = trip.days.first {
+            Calendar.current.isDate($0.date, inSameDayAs: selectedDay)
+        }?.visits ?? []
+
+        return List {
+            if !trip.visits.isEmpty {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     if let next = trip.nextVisit(after: context.date) {
                         Button {
@@ -196,11 +234,23 @@ struct TripDetailView: View {
                     }
                 }
                 .listRowBackground(Color.teal.opacity(0.12))
+            }
 
-                ForEach(trip.days) { day in
-                    Section(day.date.dayLabel) {
-                        ForEach(Array(day.visits.enumerated()), id: \.element.id) { index, visit in
-                            Button { showVisit(visit) } label: {
+            if visits.isEmpty {
+                ContentUnavailableView {
+                    Label("이날은 아직 일정이 없어요", systemImage: "calendar")
+                } description: {
+                    Text("지도에서 이 날짜에 방문할 장소를 추가해 보세요.")
+                } actions: {
+                    Button("지도에서 장소 추가") { mode = .map }
+                        .buttonStyle(.borderedProminent)
+                }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            } else {
+                Section(selectedDay.dayLabel) {
+                    ForEach(Array(visits.enumerated()), id: \.element.id) { index, visit in
+                        Button { showVisit(visit) } label: {
                                 HStack(spacing: 12) {
                                     Text("\(index + 1)")
                                         .font(.subheadline.bold())
@@ -220,22 +270,56 @@ struct TripDetailView: View {
                                 }
                                 .padding(.vertical, 3)
                                 .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("visit-row-\(visit.placeName)")
+                        .swipeActions(allowsFullSwipe: false) {
+                            Button { visitToDelete = visit } label: {
+                                Label("삭제", systemImage: "trash")
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier("visit-row-\(visit.placeName)")
-                            .swipeActions(allowsFullSwipe: false) {
-                                Button { visitToDelete = visit } label: {
-                                    Label("삭제", systemImage: "trash")
-                                }
-                                .tint(.red)
-                            }
-                            .contextMenu {
-                                Button("일정 삭제", systemImage: "trash", role: .destructive) { visitToDelete = visit }
-                            }
+                            .tint(.red)
+                        }
+                        .contextMenu {
+                            Button("일정 삭제", systemImage: "trash", role: .destructive) { visitToDelete = visit }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+private struct TravelDayTabBar: View {
+    let days: [Date]
+    @Binding var selectedDay: Date
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(Array(days.enumerated()), id: \.element) { index, day in
+                    let isSelected = Calendar.current.isDate(day, inSameDayAs: selectedDay)
+                    Button {
+                        selectedDay = day
+                    } label: {
+                        VStack(spacing: 3) {
+                            Text("\(index + 1)일차")
+                                .font(.subheadline.weight(.semibold))
+                            Text(day, format: .dateTime.month().day().weekday(.short))
+                                .font(.caption)
+                        }
+                        .foregroundStyle(isSelected ? Color.white : Color.primary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(isSelected ? Color.teal : Color.secondary.opacity(0.12), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(index + 1)일차, \(day.dayLabel)")
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 4)
+        }
+        .scrollIndicators(.hidden)
     }
 }
