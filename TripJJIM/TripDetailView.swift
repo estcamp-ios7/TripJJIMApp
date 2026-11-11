@@ -23,6 +23,7 @@ struct TripDetailView: View {
         let visit: Visit
         let isNew: Bool
     }
+    @State private var detailVisitID: Visit.ID?
     @State private var visitToDelete: Visit?
 
     var body: some View {
@@ -53,7 +54,12 @@ struct TripDetailView: View {
                         set: { mapDay = Calendar.current.startOfDay(for: $0) }
                     ), onAdd: { coordinate, name, address in
                         startAddingVisit(at: coordinate, name: name ?? "", address: address)
-                    }, onEdit: editVisit(_:), onSearch: openPlaceSearch(near:))
+                    }, onEdit: editVisit(_:), onDetail: showVisit(_:), onSearch: openPlaceSearch(near:))
+                }
+            }
+            .navigationDestination(item: $detailVisitID) { id in
+                VisitDetailView(tripID: tripID, visitID: id) { date in
+                    mapDay = Calendar.current.startOfDay(for: date)
                 }
             }
             .navigationTitle(trip.name)
@@ -115,6 +121,10 @@ struct TripDetailView: View {
         }
     }
 
+    private func showVisit(_ visit: Visit) {
+        detailVisitID = visit.id
+    }
+
     private func editVisit(_ visit: Visit) {
         editor = Editor(visit: visit, isNew: false)
     }
@@ -164,7 +174,7 @@ struct TripDetailView: View {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     if let next = trip.nextVisit(after: context.date) {
                         Button {
-                            editVisit(next)
+                            showVisit(next)
                         } label: {
                             VStack(alignment: .leading, spacing: 6) {
                                 Label("다음 목적지", systemImage: "location.fill")
@@ -190,7 +200,7 @@ struct TripDetailView: View {
                 ForEach(trip.days) { day in
                     Section(day.date.dayLabel) {
                         ForEach(Array(day.visits.enumerated()), id: \.element.id) { index, visit in
-                            Button { editVisit(visit) } label: {
+                            Button { showVisit(visit) } label: {
                                 HStack(spacing: 12) {
                                     Text("\(index + 1)")
                                         .font(.subheadline.bold())
@@ -209,6 +219,7 @@ struct TripDetailView: View {
                                         .foregroundStyle(.tertiary)
                                 }
                                 .padding(.vertical, 3)
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("visit-row-\(visit.placeName)")

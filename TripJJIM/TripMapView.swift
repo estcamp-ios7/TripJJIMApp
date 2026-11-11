@@ -7,6 +7,7 @@ struct TripMapView: View {
     @Binding var selectedDay: Date
     let onAdd: (PlaceCoordinate, String?, String?) -> Void
     let onEdit: (Visit) -> Void
+    let onDetail: (Visit) -> Void
     let onSearch: (PlaceCoordinate?) -> Void
     private let selectionLog = Logger(subsystem: "com.tripjjim.TripJJIM", category: "MapSelection")
 
@@ -216,8 +217,13 @@ struct TripMapView: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("일정 수정") { onEdit(visit) }
-                        .buttonStyle(.bordered)
+                    VStack(alignment: .trailing, spacing: 6) {
+                        Button("상세 보기") { onDetail(visit) }
+                            .buttonStyle(.borderedProminent)
+                        Button("일정 수정") { onEdit(visit) }
+                            .buttonStyle(.bordered)
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
                 }
                 .accessibilityIdentifier("map-place-detail")
             } else {
