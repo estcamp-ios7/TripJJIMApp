@@ -35,7 +35,7 @@ struct ReminderScheduler {
         var failure: Error?
         for visit in requested {
             let id = identifier(for: visit)
-            let body = "\(visit.placeName) 방문 시간입니다."
+            let body = visit.reminderBody
             if let request = existing[id],
                request.content.body == body,
                let trigger = request.trigger as? UNCalendarNotificationTrigger,
