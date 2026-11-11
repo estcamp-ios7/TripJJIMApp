@@ -72,9 +72,6 @@ struct TripMapView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                DatePicker("지도 날짜", selection: $selectedDay, displayedComponents: .date)
-                    .labelsHidden()
-                    .accessibilityLabel("지도 날짜")
                 Spacer()
                 Button(action: { onSearch(nil) }) {
                     Image(systemName: "magnifyingglass")
@@ -192,7 +189,7 @@ struct TripMapView: View {
                     if draftName != nil, let draftAddress {
                         Text(draftAddress)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .readableSecondaryForeground()
                             .lineLimit(2)
                     }
                     if draftName == nil {
@@ -212,11 +209,11 @@ struct TripMapView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(visit.placeName).font(.headline)
                         if let address = visit.address {
-                            Text(address).font(.footnote).foregroundStyle(.secondary)
+                            Text(address).font(.footnote).readableSecondaryForeground()
                         }
                         Text(visit.visitDate.timeLabel)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .readableSecondaryForeground()
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 6) {
@@ -231,7 +228,7 @@ struct TripMapView: View {
             } else {
                 Label("지도를 탭해 장소를 찜해 보세요.", systemImage: "hand.tap")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .readableSecondaryForeground()
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

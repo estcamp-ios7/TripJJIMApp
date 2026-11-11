@@ -30,7 +30,7 @@ struct VisitDetailView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(visit.placeName).font(.title2.bold())
                     if let address = visit.address, !address.isEmpty {
-                        Text(address).font(.subheadline).foregroundStyle(.secondary)
+                        Text(address).font(.subheadline).readableSecondaryForeground()
                     }
                 }
                 .padding(.vertical, 4)
@@ -38,7 +38,7 @@ struct VisitDetailView: View {
             }
             Section("방문 일시와 알림") {
                 Label("\(visit.visitDate.dayLabel) · \(visit.visitDate.timeLabel)", systemImage: "calendar")
-                    .foregroundStyle(.secondary)
+                    .readableSecondaryForeground()
                 Label(reminderLabel(for: visit), systemImage: visit.reminderEnabled ? "bell" : "bell.slash")
                     .accessibilityIdentifier("visit-detail-reminder")
             }
@@ -48,7 +48,7 @@ struct VisitDetailView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("visit-detail-memo")
                 } else {
-                    Text("작성한 메모가 없어요.").foregroundStyle(.secondary)
+                    Text("작성한 메모가 없어요.").readableSecondaryForeground()
                 }
             }
             Section {
@@ -95,7 +95,7 @@ struct VisitDetailView: View {
             .accessibilityIdentifier("visit-detail-map")
         } else {
             Label("지도에 표시할 위치 정보가 없어요.", systemImage: "map")
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).readableSecondaryForeground()
         }
     }
 

@@ -33,7 +33,7 @@ struct VisitEditorView: View {
                     if let address = visit.address {
                         Label(address, systemImage: "mappin")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .readableSecondaryForeground()
                     }
                     NavigationLink {
                         PlaceSearchView(region: region, tripRegionLocation: tripRegionLocation) { place in

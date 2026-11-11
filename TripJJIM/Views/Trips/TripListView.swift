@@ -23,36 +23,54 @@ struct TripListView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                 } else {
-                    Section("내 여행") {
+                    Section {
                         ForEach(store.trips) { trip in
-                            NavigationLink(value: trip.id) {
-                                HStack(spacing: 14) {
-                                    Image(systemName: "suitcase.rolling.fill")
-                                        .foregroundStyle(.teal)
-                                        .frame(width: 40, height: 40)
-                                        .background(.teal.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
-                                        .accessibilityHidden(true)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(trip.name)
-                                            .font(.headline)
-                                        if let region = trip.region, !region.isEmpty {
-                                            Text(region)
-                                                .font(.subheadline)
-                                                .foregroundStyle(.secondary)
-                                                .fixedSize(horizontal: false, vertical: true)
+                            HStack(spacing: 8) {
+                                NavigationLink(value: trip.id) {
+                                    HStack(spacing: 14) {
+                                        Image(systemName: "suitcase.rolling.fill")
+                                            .foregroundStyle(.teal)
+                                            .frame(width: 40, height: 40)
+                                            .background(.teal.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                                            .accessibilityHidden(true)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(trip.name)
+                                                .font(.title3.bold())
+                                            if let region = trip.region, !region.isEmpty {
+                                                Text(region)
+                                                    .font(.subheadline)
+                                                    .readableSecondaryForeground()
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            }
+                                            if let period = TripListPeriod(start: trip.startDate, end: trip.endDate) {
+                                                Text("\(period.dates) · \(period.duration)")
+                                                    .font(.subheadline)
+                                                    .readableSecondaryForeground()
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            }
+                                            TimelineView(.periodic(from: .now, by: 60)) { context in
+                                                Text("남은 방문 일정 \(remainingVisitCount(in: trip, after: context.date))개")
+                                                    .font(.subheadline)
+                                                    .readableSecondaryForeground()
+                                            }
                                         }
-                                        if let period = TripListPeriod(start: trip.startDate, end: trip.endDate) {
-                                            Text("\(period.dates) · \(period.duration)")
-                                                .font(.subheadline)
-                                                .foregroundStyle(.secondary)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                        }
-                                        Text("방문 일정 \(trip.visits.count)개")
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
                                     }
+                                    .padding(.vertical, 4)
                                 }
-                                .padding(.vertical, 4)
+
+                                Menu {
+                                    Button("여행 수정", systemImage: "pencil") {
+                                        editor = .edit(trip)
+                                    }
+                                    Button("여행 삭제", systemImage: "trash", role: .destructive) {
+                                        tripToDelete = trip
+                                    }
+                                } label: {
+                                    Image(systemName: "ellipsis.circle")
+                                        .font(.title3)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                }
+                                .accessibilityLabel("\(trip.name) 관리")
                             }
                             .swipeActions(edge: .leading) {
                                 Button { editor = .edit(trip) } label: {
@@ -74,7 +92,7 @@ struct TripListView: View {
                     }
                 }
             }
-            .navigationTitle("TripJJIM")
+            .navigationTitle("나의 여행")
             .navigationDestination(for: UUID.self) { id in
                 TripDetailView(tripID: id)
             }
@@ -99,6 +117,10 @@ struct TripListView: View {
                 Text("‘\(trip.name)’의 모든 방문 일정과 알림도 함께 삭제됩니다.")
             }
         }
+    }
+
+    private func remainingVisitCount(in trip: Trip, after date: Date) -> Int {
+        trip.visits.lazy.filter { $0.visitDate > date }.count
     }
 
     private func openCreatedTrip() {

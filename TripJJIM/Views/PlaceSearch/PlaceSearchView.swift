@@ -122,7 +122,7 @@ struct PlaceSearchView: View {
 
                     Text("장소 이름이나 주소를 검색해 여행 일정에 추가해 보세요.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .readableSecondaryForeground()
                         .frame(maxWidth: 264)
                 }
                 .multilineTextAlignment(.center)
@@ -140,7 +140,7 @@ struct PlaceSearchView: View {
     private var searchResultsList: some View {
         List {
             if let label = hintLabel {
-                Text(label).font(.footnote).foregroundStyle(.secondary)
+                Text(label).font(.footnote).readableSecondaryForeground()
                     .listRowBackground(Color.clear)
             }
             if loading {
@@ -580,6 +580,7 @@ struct PlaceSearchIntent {
 }
 
 struct TripSearchField: View {
+    @Environment(\.colorScheme) private var colorScheme
     let prompt: String
     @Binding var query: String
     var focused: FocusState<Bool>.Binding
@@ -594,7 +595,7 @@ struct TripSearchField: View {
             Button(action: submit) {
                 Image(systemName: "magnifyingglass")
                     .font(.body.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .readableSecondaryForeground()
                     .frame(width: 48, height: 48)
                     .contentShape(Rectangle())
             }
@@ -603,7 +604,13 @@ struct TripSearchField: View {
             .disabled(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
             TextField(prompt, text: $query,
-                      prompt: emphasizesPrompt ? Text(prompt).foregroundStyle(.secondary) : nil)
+                      prompt: emphasizesPrompt
+                          ? Text(prompt).foregroundStyle(
+                              colorScheme == .dark
+                                  ? Color.primary.opacity(0.78)
+                                  : Color.secondary
+                          )
+                          : nil)
                 .focused(focused)
                 .submitLabel(.search)
                 .onSubmit(submit)
@@ -613,7 +620,7 @@ struct TripSearchField: View {
                 Button { query = "" } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.body)
-                        .foregroundStyle(.secondary)
+                        .readableSecondaryForeground()
                         .frame(width: 48, height: 48)
                         .contentShape(Rectangle())
                 }
@@ -653,7 +660,7 @@ struct TripSearchResultRow: View {
                 if let subtitle, !subtitle.isEmpty, subtitle != title {
                     Text(subtitle)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .readableSecondaryForeground()
                         .lineLimit(3)
                 }
             }
@@ -689,7 +696,7 @@ struct TripSearchStatusRow: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                 if let detail {
-                    Text(detail).font(.footnote).foregroundStyle(.secondary)
+                    Text(detail).font(.footnote).readableSecondaryForeground()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -94,19 +94,22 @@ struct Trip: Codable, Identifiable {
     var regionLocation: TripRegionLocation?
 
     var travelSummary: String? {
-        var parts = [region].compactMap { $0 }.filter { !$0.isEmpty }
+        var parts: [String] = []
         if let startDate, let endDate {
             let calendar = Calendar.current
             let first = calendar.startOfDay(for: startDate)
             let last = calendar.startOfDay(for: endDate)
             let nights = calendar.dateComponents([.day], from: first, to: last).day ?? 0
             let style = Date.FormatStyle(date: .numeric).locale(Locale(identifier: "ko_KR"))
-            let firstLabel = first.formatted(style)
-            if nights == 0 {
-                parts.append("\(firstLabel) · 당일 여행")
-            } else {
-                parts.append("\(firstLabel) ~ \(last.formatted(style)) · \(nights)박 \(nights + 1)일")
-            }
+            let dateRange = nights == 0
+                ? first.formatted(style)
+                : "\(first.formatted(style)) ~ \(last.formatted(style))"
+
+            parts.append(nights == 0 ? "당일 여행" : "\(nights)박 \(nights + 1)일")
+            parts.append(dateRange)
+        }
+        if let region, !region.isEmpty {
+            parts.append(region)
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
