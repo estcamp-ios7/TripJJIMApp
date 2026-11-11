@@ -100,11 +100,12 @@ final class TripStore {
         return persist(updated)
     }
 
-    func deleteVisit(_ id: Visit.ID, in tripID: Trip.ID) {
+    @discardableResult
+    func deleteVisit(_ id: Visit.ID, in tripID: Trip.ID) -> Bool {
         var updated = trips
-        guard let index = updated.firstIndex(where: { $0.id == tripID }) else { return }
+        guard let index = updated.firstIndex(where: { $0.id == tripID }) else { return false }
         updated[index].visits.removeAll { $0.id == id }
-        persist(updated)
+        return persist(updated)
     }
 
     func requestReminderPermission() async throws -> Bool {

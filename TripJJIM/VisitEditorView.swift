@@ -6,6 +6,7 @@ struct VisitEditorView: View {
     @State private var visit: Visit
     @State private var isRequestingPermission = false
     @State private var reminderMessage: String?
+    @State private var memo: String
 
     private let region: String?
     private let original: Visit
@@ -14,6 +15,7 @@ struct VisitEditorView: View {
 
     init(visit: Visit, isNew: Bool, region: String?, onSave: @escaping (Visit) -> Bool) {
         _visit = State(initialValue: visit)
+        _memo = State(initialValue: visit.memo ?? "")
         self.region = region
         original = visit
         self.isNew = isNew
@@ -42,6 +44,11 @@ struct VisitEditorView: View {
                     }
                     DatePicker("방문 날짜", selection: $visit.visitDate, displayedComponents: .date)
                     DatePicker("방문 시간", selection: $visit.visitDate, displayedComponents: .hourAndMinute)
+                }
+                Section("방문 메모") {
+                    TextField("메모를 입력해 주세요", text: $memo, axis: .vertical)
+                        .lineLimit(3...8)
+                        .accessibilityIdentifier("visit-memo")
                 }
                 reminderSection
             }
@@ -138,6 +145,7 @@ struct VisitEditorView: View {
             reminderMessage = "알림 날짜와 시간을 현재 시각 이후로 선택해 주세요."
             return
         }
+        visit.memo = memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : memo
         if onSave(visit) { dismiss() }
     }
 }

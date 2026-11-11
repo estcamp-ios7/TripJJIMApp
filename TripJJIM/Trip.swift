@@ -11,6 +11,7 @@ struct Visit: Codable, Identifiable, Equatable {
     var visitDate: Date
     var coordinate: PlaceCoordinate
     var address: String? = nil
+    var memo: String? = nil
     var reminderEnabled = false
     var customReminderDate: Date?
 

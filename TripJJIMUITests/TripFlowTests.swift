@@ -171,6 +171,67 @@ final class TripFlowTests: XCTestCase {
         deleteTrip(trip, in: app)
     }
 
+    func testVisitDetailMemoSurvivesRelaunch() throws {
+        let app = XCUIApplication()
+        let trip = "Memo trip \(UUID().uuidString.prefix(6))"
+        let place = "Memo Cafe"
+        let firstMemo = "First line"
+        app.launch()
+
+        createTrip(trip, in: app)
+        app.buttons["지도에서 장소 추가"].tap()
+        addPin(named: place, in: app)
+        let pin = app.buttons["map-pin-\(place)"]
+        XCTAssertTrue(pin.waitForExistence(timeout: 10))
+        pin.tap()
+        app.buttons["상세 보기"].tap()
+        XCTAssertTrue(app.navigationBars["방문 일정 상세"].waitForExistence(timeout: 5))
+        attachScreen("Visit detail", in: app)
+        app.buttons["일정 수정"].tap()
+        let memo = app.textFields["visit-memo"]
+        if !memo.isHittable { app.swipeUp() }
+        XCTAssertTrue(memo.waitForExistence(timeout: 5))
+        memo.tap()
+        memo.typeText(firstMemo)
+        app.buttons["저장"].tap()
+        XCTAssertTrue(app.staticTexts[firstMemo].waitForExistence(timeout: 5))
+
+        app.buttons["일정 수정"].tap()
+        if !memo.isHittable { app.swipeUp() }
+        memo.tap()
+        memo.typeText(" discarded")
+        app.buttons["취소"].tap()
+        XCTAssertTrue(app.staticTexts[firstMemo].waitForExistence(timeout: 5))
+
+        app.buttons["일정 수정"].tap()
+        if !memo.isHittable { app.swipeUp() }
+        memo.tap()
+        memo.typeText(" edited")
+        let editedMemo = try XCTUnwrap(memo.value as? String)
+        XCTAssertTrue(editedMemo.contains("edited"))
+        XCTAssertNotEqual(editedMemo, firstMemo)
+        app.buttons["저장"].tap()
+        XCTAssertTrue(app.staticTexts[editedMemo].waitForExistence(timeout: 5))
+
+        app.terminate()
+        app.launch()
+        let tripRow = app.staticTexts[trip]
+        XCTAssertTrue(tripRow.waitForExistence(timeout: 5))
+        tripRow.tap()
+        app.buttons["visit-row-\(place)"].tap()
+        XCTAssertTrue(app.navigationBars["방문 일정 상세"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts[editedMemo].waitForExistence(timeout: 5))
+        attachScreen("Visit detail with memo", in: app)
+        if !app.buttons["일정 삭제"].isHittable { app.swipeUp() }
+        app.buttons["일정 삭제"].tap()
+        app.alerts.buttons["삭제"].tap()
+        XCTAssertTrue(app.navigationBars[trip].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["visit-row-\(place)"].exists)
+        app.buttons["지도"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["trip-map"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(pin.exists)
+    }
+
     private func tapSwitch(_ identifier: String, in app: XCUIApplication) {
         let toggle = app.switches[identifier]
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
@@ -181,6 +242,9 @@ final class TripFlowTests: XCTestCase {
         let row = app.buttons["visit-row-\(name)"]
         XCTAssertTrue(row.waitForExistence(timeout: 5))
         row.tap()
+        let edit = app.buttons["일정 수정"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        edit.tap()
     }
 
     private func addPin(named name: String, in app: XCUIApplication, configure: () -> Void = {}) {
@@ -188,7 +252,10 @@ final class TripFlowTests: XCTestCase {
         XCTAssertTrue(map.waitForExistence(timeout: 10))
         map.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         XCTAssertTrue(app.staticTexts["draft-location-address"].exists)
-        app.buttons["일정 추가"].tap()
+        let add = app.buttons["일정 추가"]
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: add)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 15), .completed)
+        add.tap()
         let field = app.textFields["place-name"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.tap()
