@@ -15,7 +15,9 @@ TripJJIM
 - OpenAI Codex
 - Gemini
 ## Credits
-- [Ned Park](https://africastart.com)
--
+- iingyeol00-del https://github.com/iingyeol00-del
+- junho-14 https://github.com/junho-14
+- jeongwooan https://github.com/jeongwooan
+- goxo5435-alt https://github.com/goxo5435-alt
 ### License
 Licensed under the [MIT](LICENSE) license.
