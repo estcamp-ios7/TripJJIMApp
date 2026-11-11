@@ -29,19 +29,62 @@ final class TripStore {
         trips.first { $0.id == id }
     }
 
-    @discardableResult
-    func saveTrip(name: String, id: Trip.ID? = nil) -> Bool {
-        var updated = trips
-        if let id {
-            guard let index = updated.firstIndex(where: { $0.id == id }) else { return false }
-            updated[index].name = name
-        } else {
-            updated.append(Trip(name: name))
+    enum TripEditError: LocalizedError {
+        case missingName, missingRegion, invalidPeriod, visitOutsidePeriod, missingTrip, storage
+
+        var errorDescription: String? {
+            switch self {
+            case .missingName: "여행 이름을 입력해 주세요."
+            case .missingRegion: "여행 지역을 입력하거나 검색 결과에서 선택해 주세요."
+            case .invalidPeriod: "종료일은 시작일과 같거나 이후여야 합니다."
+            case .visitOutsidePeriod: "저장된 방문 일정이 모두 포함되도록 여행 기간을 선택해 주세요."
+            case .missingTrip: "수정할 여행을 찾을 수 없습니다."
+            case .storage: "여행 정보를 저장하지 못했습니다. 다시 시도해 주세요."
+            }
         }
-        return persist(updated)
     }
 
-    func deleteTrip(_ id: Trip.ID) {
+    func saveTrip(name: String, startDate: Date, endDate: Date, region: String, id: Trip.ID?) throws -> Trip.ID {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let region = region.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { throw TripEditError.missingName }
+        guard !region.isEmpty else { throw TripEditError.missingRegion }
+
+        let calendar = Calendar.current
+        let first = calendar.startOfDay(for: startDate)
+        let last = calendar.startOfDay(for: endDate)
+        guard first <= last else { throw TripEditError.invalidPeriod }
+
+        var updated = trips
+        let index: Int
+        if let id {
+            guard let existing = updated.firstIndex(where: { $0.id == id }) else {
+                throw TripEditError.missingTrip
+            }
+            index = existing
+        } else {
+            index = updated.endIndex
+            updated.append(Trip(name: name))
+        }
+
+        let periodChanged = updated[index].startDate != first || updated[index].endDate != last
+        if periodChanged && updated[index].visits.contains(where: {
+            let day = calendar.startOfDay(for: $0.visitDate)
+            return day < first || day > last
+        }) {
+            throw TripEditError.visitOutsidePeriod
+        }
+
+        updated[index].name = name
+        updated[index].startDate = first
+        updated[index].endDate = last
+        updated[index].region = region
+        guard persist(updated) else { throw TripEditError.storage }
+        return updated[index].id
+    }
+
+    @discardableResult
+    func deleteTrip(_ id: Trip.ID) -> Bool {
         persist(trips.filter { $0.id != id })
     }
 

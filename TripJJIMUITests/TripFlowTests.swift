@@ -14,13 +14,24 @@ final class TripFlowTests: XCTestCase {
 
         createTrip(trip, in: app)
         app.buttons["지도에서 장소 추가"].tap()
+        app.buttons["장소 검색"].tap()
+        XCTAssertTrue(app.navigationBars["장소 검색"].waitForExistence(timeout: 5))
+        attachScreen("Place search", in: app)
+        app.buttons["닫기"].tap()
         addPin(named: place, in: app)
 
         let pin = app.buttons["map-pin-\(place)"]
         XCTAssertTrue(pin.waitForExistence(timeout: 10))
+        attachScreen("Map with saved pin", in: app)
         pin.tap()
         XCTAssertTrue(app.buttons["일정 수정"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts[place].exists)
+        app.buttons["일정 수정"].tap()
+        app.buttons["장소 변경"].tap()
+        XCTAssertTrue(app.navigationBars["장소 검색"].waitForExistence(timeout: 5))
+        app.navigationBars["장소 검색"].buttons.firstMatch.tap()
+        app.buttons["취소"].tap()
+        XCTAssertTrue(pin.waitForExistence(timeout: 5))
         app.buttons["일정"].tap()
         XCTAssertTrue(app.staticTexts["다음 목적지"].exists)
         XCTAssertTrue(app.buttons["visit-row-\(place)"].exists)
@@ -39,11 +50,12 @@ final class TripFlowTests: XCTestCase {
         app.navigationBars[trip].buttons.firstMatch.tap()
         let renamedTrip = trip + " Edited"
         tripRow.press(forDuration: 0.9)
-        app.buttons["이름 수정"].tap()
-        let nameField = app.alerts.textFields["여행 이름"]
+        app.buttons["여행 수정"].tap()
+        let nameField = app.textFields["trip-name"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
         nameField.tap()
         nameField.typeText(" Edited")
-        app.alerts.buttons["저장"].tap()
+        app.buttons["save-trip"].tap()
         deleteTrip(renamedTrip, in: app)
     }
 
@@ -175,7 +187,7 @@ final class TripFlowTests: XCTestCase {
         let map = app.descendants(matching: .any).matching(identifier: "trip-map").firstMatch
         XCTAssertTrue(map.waitForExistence(timeout: 10))
         map.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        XCTAssertTrue(app.staticTexts["선택한 위치"].exists)
+        XCTAssertTrue(app.staticTexts["draft-location-address"].exists)
         app.buttons["일정 추가"].tap()
         let field = app.textFields["place-name"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))
@@ -186,15 +198,67 @@ final class TripFlowTests: XCTestCase {
     }
 
     private func createTrip(_ name: String, in app: XCUIApplication) {
+        openTripEditor(in: app)
+        fillTrip(name: name, region: "Seoul", in: app)
+        app.buttons["save-trip"].tap()
+        XCTAssertTrue(app.navigationBars[name].waitForExistence(timeout: 5))
+    }
+
+    private func openTripEditor(in app: XCUIApplication) {
         app.buttons["새 여행"].tap()
-        let field = app.alerts.textFields["여행 이름"]
-        XCTAssertTrue(field.waitForExistence(timeout: 5))
-        field.tap()
-        field.typeText(name)
-        app.alerts.buttons["저장"].tap()
-        let row = app.staticTexts[name]
+        XCTAssertTrue(app.textFields["trip-name"].waitForExistence(timeout: 5))
+    }
+
+    private func fillTrip(name: String, region: String, in app: XCUIApplication) {
+        let nameField = app.textFields["trip-name"]
+        nameField.tap()
+        nameField.typeText(name)
+        let regionField = app.textFields["trip-region"]
+        regionField.tap()
+        regionField.typeText(region)
+    }
+
+    func testTripPeriodAndRegionFlow() {
+        let app = XCUIApplication()
+        let trip = "Period \(UUID().uuidString.prefix(6))"
+        let edited = trip + " Edited"
+        app.launch()
+
+        openTripEditor(in: app)
+        attachScreen("Trip creation", in: app)
+        fillTrip(name: trip, region: "Seoul", in: app)
+        app.buttons["save-trip"].tap()
+        XCTAssertTrue(app.navigationBars[trip].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Seoul", "당일 여행")).firstMatch.exists)
+        attachScreen("Trip detail", in: app)
+
+        app.buttons["여행 관리"].tap()
+        app.buttons["여행 수정"].tap()
+        let nameField = app.textFields["trip-name"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        attachScreen("Trip editing", in: app)
+        nameField.tap()
+        nameField.typeText(" Edited")
+        let regionField = app.textFields["trip-region"]
+        regionField.tap()
+        regionField.typeText(" City")
+        app.buttons["save-trip"].tap()
+        XCTAssertTrue(app.navigationBars[edited].waitForExistence(timeout: 5))
+
+        app.terminate()
+        app.launch()
+        let row = app.staticTexts[edited]
         XCTAssertTrue(row.waitForExistence(timeout: 5))
-        row.tap()
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Seoul City")).firstMatch.exists)
+        attachScreen("Trip list", in: app)
+        deleteTrip(edited, in: app)
+    }
+
+    private func attachScreen(_ name: String, in app: XCUIApplication) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 
     private func deleteTrip(_ name: String, in app: XCUIApplication) {

@@ -3,8 +3,14 @@ import SwiftUI
 struct TripDetailView: View {
     @Environment(TripStore.self) private var store
     let tripID: Trip.ID
+    @Environment(\.dismiss) private var dismiss
+    @State private var tripEditor: TripEditorRoute?
+    @State private var isDeletingTrip = false
     @State private var editor: Editor?
     @State private var mode: Mode = .itinerary
+    @State private var searchingPlace = false
+    @State private var nearbySearchCoordinate: PlaceCoordinate?
+    @State private var pendingPlace: PlaceSearchResult?
     @State private var mapDay: Date?
 
     private enum Mode: String, CaseIterable {
@@ -22,6 +28,14 @@ struct TripDetailView: View {
     var body: some View {
         if let trip = store.trip(withID: tripID) {
             VStack(spacing: 0) {
+                if let summary = trip.travelSummary {
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                }
                 Picker("여행 보기", selection: $mode) {
                     ForEach(Mode.allCases, id: \.self) { mode in
                         Text(mode.rawValue).tag(mode)
@@ -37,13 +51,26 @@ struct TripDetailView: View {
                     TripMapView(trip: trip, selectedDay: Binding(
                         get: { mapDay ?? defaultMapDay(for: trip) },
                         set: { mapDay = Calendar.current.startOfDay(for: $0) }
-                    ), onAdd: startAddingVisit(at:), onEdit: editVisit(_:))
+                    ), onAdd: { coordinate, name, address in
+                        startAddingVisit(at: coordinate, name: name ?? "", address: address)
+                    }, onEdit: editVisit(_:), onSearch: openPlaceSearch(near:))
                 }
             }
             .navigationTitle(trip.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button("여행 수정", systemImage: "pencil") { tripEditor = .edit(trip) }
+                        Button("여행 삭제", systemImage: "trash", role: .destructive) { isDeletingTrip = true }
+                    } label: {
+                        Label("여행 관리", systemImage: "ellipsis.circle")
+                    }
+                }
                 if mode == .itinerary {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { openPlaceSearch(near: nil) } label: { Label("장소 검색", systemImage: "magnifyingglass") }
+                    }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             mode = .map
@@ -53,8 +80,24 @@ struct TripDetailView: View {
                     }
                 }
             }
+            .sheet(item: $tripEditor) { route in
+                TripEditorView(trip: route.trip) { _ in tripEditor = nil }
+            }
+            .alert("여행을 삭제할까요?", isPresented: $isDeletingTrip) {
+                Button("취소", role: .cancel) {}
+                Button("삭제", role: .destructive) {
+                    if store.deleteTrip(tripID) { dismiss() }
+                }
+            } message: {
+                Text("‘\(trip.name)’의 모든 방문 일정과 알림도 함께 삭제됩니다.")
+            }
+            .sheet(isPresented: $searchingPlace, onDismiss: openSelectedPlace) {
+                NavigationStack {
+                    PlaceSearchView(region: trip.region, nearby: nearbySearchCoordinate) { pendingPlace = $0 }
+                }
+            }
             .sheet(item: $editor) { editor in
-                VisitEditorView(visit: editor.visit, isNew: editor.isNew) { edited in
+                VisitEditorView(visit: editor.visit, isNew: editor.isNew, region: trip.region) { edited in
                     guard store.saveVisit(edited, in: tripID) else { return false }
                     mapDay = Calendar.current.startOfDay(for: edited.visitDate)
                     return true
@@ -77,17 +120,30 @@ struct TripDetailView: View {
     }
 
     private func defaultMapDay(for trip: Trip) -> Date {
-        Calendar.current.startOfDay(for: trip.nextVisit(after: .now)?.visitDate ?? trip.days.first?.date ?? .now)
+        Calendar.current.startOfDay(for: trip.nextVisit(after: .now)?.visitDate ?? trip.days.first?.date ?? trip.startDate ?? .now)
     }
 
-    private func startAddingVisit(at coordinate: PlaceCoordinate) {
+    private func openPlaceSearch(near coordinate: PlaceCoordinate?) {
+        nearbySearchCoordinate = coordinate
+        searchingPlace = true
+    }
+
+    private func openSelectedPlace() {
+        guard let place = pendingPlace else { return }
+        pendingPlace = nil
+        startAddingVisit(at: place.coordinate, name: place.name, address: place.address)
+    }
+
+    private func startAddingVisit(at coordinate: PlaceCoordinate, name: String = "", address: String? = nil) {
         guard let trip = store.trip(withID: tripID) else { return }
         let day = mapDay ?? defaultMapDay(for: trip)
         let calendar = Calendar.current
         let date = calendar.isDateInToday(day)
             ? calendar.nextDate(after: .now, matching: DateComponents(minute: 0, second: 0), matchingPolicy: .nextTime)
             : calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day)
-        let visit = Visit(placeName: "", visitDate: date ?? day, coordinate: coordinate)
+        let fallback = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
+        let visitDate = date.flatMap { calendar.isDate($0, inSameDayAs: day) ? $0 : nil } ?? fallback
+        let visit = Visit(placeName: name, visitDate: visitDate, coordinate: coordinate, address: address)
         editor = Editor(visit: visit, isNew: true)
     }
 
