@@ -2,21 +2,16 @@ import SwiftUI
 
 struct TripDetailView: View {
     @Environment(TripStore.self) private var store
+    @Environment(AppRouter.self) private var router
     let tripID: Trip.ID
     @Environment(\.dismiss) private var dismiss
     @State private var tripEditor: TripEditorRoute?
     @State private var isDeletingTrip = false
     @State private var editor: Editor?
-    @State private var mode: Mode = .itinerary
     @State private var searchingPlace = false
     @State private var nearbySearchCoordinate: PlaceCoordinate?
     @State private var pendingPlace: PlaceSearchResult?
     @State private var mapDay: Date?
-
-    private enum Mode: String, CaseIterable {
-        case itinerary = "일정"
-        case map = "지도"
-    }
 
     private struct Editor: Identifiable {
         var id: Visit.ID { visit.id }
@@ -37,28 +32,9 @@ struct TripDetailView: View {
                         .padding(.horizontal)
                         .padding(.top, 8)
                 }
-                Picker("여행 보기", selection: $mode) {
-                    ForEach(Mode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-
                 let days = travelDays(for: trip)
                 TravelDayTabBar(days: days, selectedDay: selectedDayBinding(for: trip))
-
-                if mode == .itinerary {
-                    itinerary(for: trip, on: selectedDay(for: trip))
-                } else {
-                    TripMapView(trip: trip, selectedDay: Binding(
-                        get: { mapDay ?? defaultMapDay(for: trip) },
-                        set: { mapDay = Calendar.current.startOfDay(for: $0) }
-                    ), onAdd: { coordinate, name, address in
-                        startAddingVisit(at: coordinate, name: name ?? "", address: address)
-                    }, onEdit: editVisit(_:), onDetail: showVisit(_:), onSearch: openPlaceSearch(near:))
-                }
+                itinerary(for: trip, on: selectedDay(for: trip))
             }
             .navigationDestination(item: $detailVisitID) { id in
                 VisitDetailView(tripID: tripID, visitID: id) { date in
@@ -68,25 +44,14 @@ struct TripDetailView: View {
             .navigationTitle(trip.name)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Button("여행 수정", systemImage: "pencil") { tripEditor = .edit(trip) }
                         Button("여행 삭제", systemImage: "trash", role: .destructive) { isDeletingTrip = true }
                     } label: {
                         Label("여행 관리", systemImage: "ellipsis.circle")
                     }
-                }
-                if mode == .itinerary {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button { openPlaceSearch(near: nil) } label: { Label("장소 검색", systemImage: "magnifyingglass") }
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            mode = .map
-                        } label: {
-                            Label("방문 일정 추가", systemImage: "plus")
-                        }
-                    }
+                    Button { openPlaceSearch(near: nil) } label: { Label("장소 검색", systemImage: "magnifyingglass") }
                 }
             }
             .sheet(item: $tripEditor) { route in
@@ -102,7 +67,12 @@ struct TripDetailView: View {
             }
             .sheet(isPresented: $searchingPlace, onDismiss: openSelectedPlace) {
                 NavigationStack {
-                    PlaceSearchView(region: trip.region, nearby: nearbySearchCoordinate, tripRegionLocation: trip.regionLocation) { pendingPlace = $0 }
+                    PlaceSearchView(
+                        region: trip.region,
+                        nearby: nearbySearchCoordinate,
+                        tripRegionLocation: trip.regionLocation,
+                        onShowMap: { router.showMap(for: tripID) }
+                    ) { pendingPlace = $0 }
                 }
             }
             .sheet(item: $editor) { editor in
@@ -245,7 +215,7 @@ struct TripDetailView: View {
                             .readableSecondaryForeground()
                     }
                 }
-                .listRowBackground(Color.teal.opacity(0.12))
+                .listRowBackground(Color.tripAccent.opacity(0.12))
             }
 
             if visits.isEmpty {
@@ -254,21 +224,21 @@ struct TripDetailView: View {
                 } description: {
                     Text("지도에서 이 날짜에 방문할 장소를 추가해 보세요.")
                 } actions: {
-                    Button("지도에서 장소 추가") { mode = .map }
+                    Button("지도에서 장소 추가") { router.showMap(for: tripID) }
                         .buttonStyle(.borderedProminent)
                 }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
             } else {
-                Section(selectedDay.dayLabel) {
+                Section {
                     ForEach(Array(visits.enumerated()), id: \.element.id) { index, visit in
                         Button { showVisit(visit) } label: {
                                 HStack(spacing: 12) {
                                     Text("\(index + 1)")
                                         .font(.subheadline.bold())
-                                        .foregroundStyle(.teal)
+                                        .foregroundStyle(Color.tripAccent)
                                         .frame(minWidth: 32, minHeight: 32)
-                                        .background(.teal.opacity(0.12), in: Circle())
+                                        .background(Color.tripAccent.opacity(0.12), in: Circle())
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(visit.placeName).font(.headline)
                                         Text(visit.visitDate.timeLabel)
@@ -312,13 +282,13 @@ private struct NextDestinationCard: View {
                 HStack {
                     Label("다음 목적지", systemImage: "location.fill")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.teal)
+                        .foregroundStyle(Color.tripAccent)
                     Spacer()
                     Text("\(pinNumber)")
                         .font(.subheadline.bold())
-                        .foregroundStyle(.teal)
+                        .foregroundStyle(Color.tripAccent)
                         .frame(minWidth: 32, minHeight: 32)
-                        .background(.teal.opacity(0.12), in: Circle())
+                        .background(Color.tripAccent.opacity(0.12), in: Circle())
                         .accessibilityLabel("\(pinNumber)번째 핀")
                 }
             }
@@ -399,13 +369,13 @@ private struct NextDestinationInfoRow: View {
                 .multilineTextAlignment(.leading)
         } icon: {
             Image(systemName: systemImage)
-                .foregroundStyle(.teal)
+                .foregroundStyle(Color.tripAccent)
                 .frame(width: 18)
         }
     }
 }
 
-private struct TravelDayTabBar: View {
+struct TravelDayTabBar: View {
     let days: [Date]
     @Binding var selectedDay: Date
 
@@ -426,7 +396,12 @@ private struct TravelDayTabBar: View {
                         .foregroundStyle(isSelected ? Color.white : Color.primary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(isSelected ? Color.teal : Color.secondary.opacity(0.12), in: Capsule())
+                        .background(
+                            isSelected
+                                ? Color.tripAccent
+                                : Color.secondary.opacity(0.12),
+                            in: Capsule()
+                        )
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(index + 1)일차, \(day.dayLabel)")

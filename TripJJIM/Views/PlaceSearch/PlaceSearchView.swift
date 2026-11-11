@@ -25,6 +25,7 @@ struct PlaceSearchView: View {
     let region: String?
     var nearby: PlaceCoordinate? = nil
     var tripRegionLocation: TripRegionLocation? = nil
+    var onShowMap: (() -> Void)? = nil
     let onSelect: (PlaceSearchResult) -> Void
     @FocusState private var searchFocused: Bool
     @State private var canSearchWider = false
@@ -62,7 +63,10 @@ struct PlaceSearchView: View {
         VStack(spacing: 0) {
             TripSearchField(prompt: "장소 이름 또는 주소", query: $query,
                             focused: $searchFocused, submitID: "place-search-submit",
-                            verticalInset: 8, leadingInset: 8, emphasizesPrompt: true) { search() }
+                            verticalInset: 8, leadingInset: 8, emphasizesPrompt: true,
+                            showMap: onShowMap.map { action in
+                                { dismiss(); action() }
+                            }) { search() }
 
             if query.isEmpty && suggestions.isEmpty && results.isEmpty && !loading {
                 initialSearchGuide
@@ -111,9 +115,9 @@ struct PlaceSearchView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "location.circle")
                         .font(.title2.weight(.semibold))
-                        .foregroundStyle(.teal)
+                        .foregroundStyle(Color.tripAccent)
                         .frame(width: 64, height: 64)
-                        .background(.teal.opacity(0.12), in: Circle())
+                        .background(Color.tripAccent.opacity(0.12), in: Circle())
                         .accessibilityHidden(true)
 
                     Text("어디를 방문할 예정인가요?")
@@ -588,6 +592,7 @@ struct TripSearchField: View {
     var verticalInset: CGFloat = 4
     var leadingInset: CGFloat = 4
     var emphasizesPrompt = false
+    var showMap: (() -> Void)? = nil
     let submit: () -> Void
 
     var body: some View {
@@ -626,6 +631,17 @@ struct TripSearchField: View {
                 }
                 .accessibilityLabel("검색어 지우기")
             }
+
+            if let showMap {
+                Button(action: showMap) {
+                    Image(systemName: "map")
+                        .font(.body.weight(.medium))
+                        .frame(width: 48, height: 48)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("지도에서 장소 선택")
+                .accessibilityIdentifier("show-trip-map")
+            }
         }
         .buttonStyle(.plain)
         .padding(.leading, leadingInset)
@@ -648,9 +664,9 @@ struct TripSearchResultRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(.teal)
+                .foregroundStyle(Color.tripAccent)
                 .frame(width: 36, height: 36)
-                .background(.teal.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                .background(Color.tripAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -686,11 +702,11 @@ struct TripSearchStatusRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             if isLoading {
-                ProgressView().tint(.teal).accessibilityHidden(true)
+            ProgressView().tint(Color.tripAccent).accessibilityHidden(true)
             } else {
                 Image(systemName: icon)
                     .font(.body.weight(.medium))
-                    .foregroundStyle(.teal)
+                    .foregroundStyle(Color.tripAccent)
                     .accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: 5) {

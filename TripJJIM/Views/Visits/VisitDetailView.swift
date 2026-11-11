@@ -87,7 +87,7 @@ struct VisitDetailView: View {
         if CLLocationCoordinate2DIsValid(coordinate) {
             let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1_200, longitudinalMeters: 1_200)
             Map(position: .constant(.region(region)), interactionModes: []) {
-                Marker(visit.placeName, coordinate: coordinate).tint(.teal)
+                Marker(visit.placeName, coordinate: coordinate).tint(Color.tripAccent)
             }
             .mapControls {}
             .frame(height: 180)
