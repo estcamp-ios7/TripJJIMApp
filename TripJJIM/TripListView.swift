@@ -35,10 +35,17 @@ struct TripListView: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(trip.name)
                                             .font(.headline)
-                                        if let summary = trip.travelSummary {
-                                            Text(summary)
+                                        if let region = trip.region, !region.isEmpty {
+                                            Text(region)
                                                 .font(.subheadline)
                                                 .foregroundStyle(.secondary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                        if let period = TripListPeriod(start: trip.startDate, end: trip.endDate) {
+                                            Text("\(period.dates) · \(period.duration)")
+                                                .font(.subheadline)
+                                                .foregroundStyle(.secondary)
+                                                .fixedSize(horizontal: false, vertical: true)
                                         }
                                         Text("방문 일정 \(trip.visits.count)개")
                                             .font(.subheadline)
@@ -98,5 +105,36 @@ struct TripListView: View {
         guard let createdTripID else { return }
         path.append(createdTripID)
         self.createdTripID = nil
+    }
+}
+
+private struct TripListPeriod {
+    let dates: String
+    let duration: String
+
+    init?(start: Date?, end: Date?, calendar: Calendar = .current) {
+        guard let start, let end else { return nil }
+        let first = calendar.startOfDay(for: start)
+        let last = calendar.startOfDay(for: end)
+        guard first <= last,
+              let nights = calendar.dateComponents([.day], from: first, to: last).day else { return nil }
+
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy.MM.dd"
+        let startLabel = formatter.string(from: first)
+
+        if nights == 0 {
+            dates = startLabel
+            duration = "당일 여행"
+        } else {
+            if calendar.isDate(first, equalTo: last, toGranularity: .year) {
+                formatter.dateFormat = "MM.dd"
+            }
+            dates = "\(startLabel) ~ \(formatter.string(from: last))"
+            duration = "\(nights)박 \(nights + 1)일"
+        }
     }
 }
