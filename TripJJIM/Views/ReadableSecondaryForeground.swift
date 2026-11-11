@@ -1,5 +1,13 @@
 import SwiftUI
 
+extension Color {
+    static let tripAccent = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor.systemTeal.withAlphaComponent(0.6)
+            : UIColor.systemTeal
+    })
+}
+
 private struct ReadableSecondaryForegroundModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
 

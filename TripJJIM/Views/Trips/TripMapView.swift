@@ -2,6 +2,211 @@ import MapKit
 import OSLog
 import SwiftUI
 
+struct TripMapTabView: View {
+    @Environment(TripStore.self) private var store
+    @Binding var path: [Trip.ID]
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            List(store.trips) { trip in
+                NavigationLink(value: trip.id) {
+                    Label {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(trip.name)
+                                .font(.headline)
+                            if let region = trip.region, !region.isEmpty {
+                                Text(region)
+                                    .font(.subheadline)
+                                    .readableSecondaryForeground()
+                            }
+                        }
+                    } icon: {
+                        Image(systemName: "map.fill")
+                            .foregroundStyle(Color.tripAccent)
+                    }
+                }
+            }
+            .overlay {
+                if store.trips.isEmpty {
+                    ContentUnavailableView(
+                        "지도로 볼 여행이 없어요",
+                        systemImage: "map",
+                        description: Text("홈에서 여행을 먼저 만들어 주세요.")
+                    )
+                }
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                TripMapSubtitle()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
+                    .padding(.bottom, 20)
+            }
+            .navigationTitle("지도")
+            .navigationDestination(for: Trip.ID.self) { tripID in
+                TripMapTripView(tripID: tripID)
+            }
+        }
+    }
+}
+
+private struct TripMapSubtitle: View {
+    var body: some View {
+        Text("어디를 둘러볼까요?")
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct TripMapTripView: View {
+    @Environment(TripStore.self) private var store
+    let tripID: Trip.ID
+
+    @State private var mapDay: Date?
+    @State private var editor: Editor?
+    @State private var searchingPlace = false
+    @State private var nearbySearchCoordinate: PlaceCoordinate?
+    @State private var pendingPlace: PlaceSearchResult?
+    @State private var detailVisitID: Visit.ID?
+
+    private struct Editor: Identifiable {
+        var id: Visit.ID { visit.id }
+        let visit: Visit
+        let isNew: Bool
+    }
+
+    var body: some View {
+        if let trip = store.trip(withID: tripID) {
+            VStack(spacing: 0) {
+                let days = travelDays(for: trip)
+                TravelDayTabBar(days: days, selectedDay: selectedDayBinding(for: trip))
+
+                TripMapView(
+                    trip: trip,
+                    selectedDay: selectedDayBinding(for: trip),
+                    onAdd: { coordinate, name, address in
+                        startAddingVisit(at: coordinate, name: name ?? "", address: address)
+                    },
+                    onEdit: editVisit(_:),
+                    onDetail: showVisit(_:),
+                    onSearch: openPlaceSearch(near:)
+                )
+            }
+            .navigationTitle(trip.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(item: $detailVisitID) { visitID in
+                VisitDetailView(tripID: tripID, visitID: visitID) { date in
+                    mapDay = Calendar.current.startOfDay(for: date)
+                }
+            }
+            .sheet(isPresented: $searchingPlace, onDismiss: openSelectedPlace) {
+                NavigationStack {
+                    PlaceSearchView(
+                        region: trip.region,
+                        nearby: nearbySearchCoordinate,
+                        tripRegionLocation: trip.regionLocation
+                    ) { pendingPlace = $0 }
+                }
+            }
+            .sheet(item: $editor) { editor in
+                VisitEditorView(
+                    visit: editor.visit,
+                    isNew: editor.isNew,
+                    region: trip.region,
+                    tripRegionLocation: trip.regionLocation
+                ) { edited in
+                    guard store.saveVisit(edited, in: tripID) else { return false }
+                    mapDay = Calendar.current.startOfDay(for: edited.visitDate)
+                    return true
+                }
+            }
+        } else {
+            ContentUnavailableView("여행을 찾을 수 없어요", systemImage: "map")
+        }
+    }
+
+    private func showVisit(_ visit: Visit) {
+        detailVisitID = visit.id
+    }
+
+    private func editVisit(_ visit: Visit) {
+        editor = Editor(visit: visit, isNew: false)
+    }
+
+    private func selectedDayBinding(for trip: Trip) -> Binding<Date> {
+        Binding(
+            get: { selectedDay(for: trip) },
+            set: { mapDay = Calendar.current.startOfDay(for: $0) }
+        )
+    }
+
+    private func selectedDay(for trip: Trip) -> Date {
+        let days = travelDays(for: trip)
+        guard let mapDay else { return defaultMapDay(for: trip) }
+        return days.contains(where: { Calendar.current.isDate($0, inSameDayAs: mapDay) })
+            ? Calendar.current.startOfDay(for: mapDay)
+            : defaultMapDay(for: trip)
+    }
+
+    private func defaultMapDay(for trip: Trip) -> Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let days = travelDays(for: trip)
+
+        if let currentDay = days.first(where: { calendar.isDate($0, inSameDayAs: today) }) {
+            return currentDay
+        }
+        if let nextVisit = trip.nextVisit(after: .now) {
+            return calendar.startOfDay(for: nextVisit.visitDate)
+        }
+        return days.first(where: { $0 >= today }) ?? days.last ?? today
+    }
+
+    private func travelDays(for trip: Trip) -> [Date] {
+        let calendar = Calendar.current
+        guard let startDate = trip.startDate, let endDate = trip.endDate else {
+            return trip.days.map(\.date)
+        }
+
+        let first = calendar.startOfDay(for: startDate)
+        let last = calendar.startOfDay(for: endDate)
+        guard first <= last else { return [first] }
+
+        var days: [Date] = []
+        var day = first
+        while day <= last {
+            days.append(day)
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        return days
+    }
+
+    private func openPlaceSearch(near coordinate: PlaceCoordinate?) {
+        nearbySearchCoordinate = coordinate
+        searchingPlace = true
+    }
+
+    private func openSelectedPlace() {
+        guard let place = pendingPlace else { return }
+        pendingPlace = nil
+        startAddingVisit(at: place.coordinate, name: place.name, address: place.address)
+    }
+
+    private func startAddingVisit(at coordinate: PlaceCoordinate, name: String = "", address: String? = nil) {
+        guard let trip = store.trip(withID: tripID) else { return }
+        let day = mapDay ?? defaultMapDay(for: trip)
+        let calendar = Calendar.current
+        let date = calendar.isDateInToday(day)
+            ? calendar.nextDate(after: .now, matching: DateComponents(minute: 0, second: 0), matchingPolicy: .nextTime)
+            : calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day)
+        let fallback = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
+        let visitDate = date.flatMap { calendar.isDate($0, inSameDayAs: day) ? $0 : nil } ?? fallback
+        let visit = Visit(placeName: name, visitDate: visitDate, coordinate: coordinate, address: address)
+        editor = Editor(visit: visit, isNew: true)
+    }
+}
+
 struct TripMapView: View {
     let trip: Trip
     @Binding var selectedDay: Date
@@ -442,12 +647,12 @@ private struct NumberedPin: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 7)
                 .frame(minWidth: 34, minHeight: 34)
-                .background(isSelected ? Color.indigo : .teal, in: Capsule())
+                .background(isSelected ? Color.indigo : Color.tripAccent, in: Capsule())
                 .overlay { Capsule().strokeBorder(.white, lineWidth: 2) }
                 .zIndex(1)
             Image(systemName: "arrowtriangle.down.fill")
                 .font(.system(size: 12))
-                .foregroundStyle(isSelected ? Color.indigo : .teal)
+                .foregroundStyle(isSelected ? Color.indigo : Color.tripAccent)
         }
         .shadow(color: .black.opacity(0.22), radius: 3, y: 2)
     }
