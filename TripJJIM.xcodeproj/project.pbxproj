@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C176064013B4A4595B326A9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F12F3C48774883BB27A292 /* HomeView.swift */; };
 		0D2178503F724437A893267B /* TripJJIMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */; };
 		29BC588330A4AD6300956A0B /* ReadableSecondaryForeground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */; };
 		83FAFBFB4BB08D8866CBACBE /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D4F12F3C48774883BB27A292 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		21119CCEE8865A9FC7EFF204 /* TripListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripListView.swift; sourceTree = "<group>"; };
 		2862A217D36C27A44B525585 /* TripFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripFlowTests.swift; sourceTree = "<group>"; };
 		28AAD1477D5182D66D4B03B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 				0DA3A5A82CE155D0C3ACDAD7 /* Visits */,
 				C389AE0A4FB5214B10B08596 /* PlaceSearch */,
 				29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */,
+				D4F12F3C48774883BB27A292 /* HomeView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -307,6 +310,7 @@
 				F329952E78F760916A6A6F24 /* TripListView.swift in Sources */,
 				913CD84084274142B0D0F421 /* PlaceSearchView.swift in Sources */,
 				8FF572239A30426289D362A2 /* TripEditorView.swift in Sources */,
+				7C176064013B4A4595B326A9 /* HomeView.swift in Sources */,
 				CEC269CA4EF9C270D7C05F60 /* TripMapView.swift in Sources */,
 				29BC588330A4AD6300956A0B /* ReadableSecondaryForeground.swift in Sources */,
 				996864B393DDC3C72282DE5A /* TripStore.swift in Sources */,

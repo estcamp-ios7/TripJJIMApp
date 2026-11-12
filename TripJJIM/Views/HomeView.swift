@@ -1,0 +1,145 @@
+import SwiftUI
+
+struct HomeView: View {
+    let onTripCreated: () -> Void
+
+    @State private var destination: Destination?
+    @State private var didCreateTrip = false
+
+    private enum Destination: String, Identifiable {
+        case recommendations, preferences, createTrip
+
+        var id: Self { self }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("어떤 여행을 떠나볼까요?")
+                        .font(.largeTitle.bold())
+                        .accessibilityAddTraits(.isHeader)
+                    Text("나에게 맞는 방법으로 여행을 시작해 보세요.")
+                        .font(.subheadline)
+                        .readableSecondaryForeground()
+                }
+                .padding(.bottom, 4)
+
+                featureCard(
+                    "추천 여행 둘러보기",
+                    description: "미리 준비된 여행 코스에서 마음에 드는 일정을 선택해 보세요.",
+                    symbol: "water.waves",
+                    colors: [.blue, .cyan],
+                    destination: .recommendations
+                )
+                featureCard(
+                    "내 취향으로 계획하기",
+                    description: "간단한 질문으로 나에게 맞는 여행 일정을 만들어 보세요.",
+                    symbol: "mountain.2.fill",
+                    colors: [.teal, .mint],
+                    destination: .preferences
+                )
+
+                Button {
+                    destination = .createTrip
+                } label: {
+                    HStack(spacing: 16) {
+                        cardText("직접 계획하기", description: "가고 싶은 곳이 이미 정해져 있나요?")
+                        Spacer(minLength: 0)
+                        Image(systemName: "arrow.right")
+                            .foregroundStyle(Color.tripAccent)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(16)
+                    .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 18))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home-create-trip")
+            }
+            .frame(maxWidth: 520)
+            .padding(20)
+            .frame(maxWidth: .infinity)
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .sheet(item: $destination, onDismiss: finishTripCreation) { destination in
+            switch destination {
+            case .recommendations:
+                preparationSheet("추천 여행 기능을 준비 중이에요.", symbol: "water.waves")
+            case .preferences:
+                preparationSheet("취향에 맞는 여행 계획 기능을 준비 중이에요.", symbol: "mountain.2")
+            case .createTrip:
+                TripEditorView(trip: nil) { _ in
+                    didCreateTrip = true
+                    self.destination = nil
+                }
+            }
+        }
+    }
+
+    private func featureCard(
+        _ title: String,
+        description: String,
+        symbol: String,
+        colors: [Color],
+        destination: Destination
+    ) -> some View {
+        Button {
+            self.destination = destination
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .aspectRatio(16 / 9, contentMode: .fit)
+                    .overlay {
+                        Image(systemName: symbol)
+                            .font(.system(size: 72, weight: .light))
+                            .foregroundStyle(.white.opacity(0.88))
+                    }
+                    .accessibilityHidden(true)
+
+                cardText(title, description: description)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(.rect(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .strokeBorder(Color(uiColor: .separator).opacity(0.22))
+                    .allowsHitTesting(false)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home-\(destination.rawValue)")
+    }
+
+    private func cardText(_ title: String, description: String) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.headline)
+            Text(description)
+                .font(.subheadline)
+                .readableSecondaryForeground()
+        }
+        .multilineTextAlignment(.leading)
+    }
+
+    private func preparationSheet(_ title: String, symbol: String) -> some View {
+        NavigationStack {
+            ContentUnavailableView(title, systemImage: symbol)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("닫기") { destination = nil }
+                    }
+                }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func finishTripCreation() {
+        guard didCreateTrip else { return }
+        didCreateTrip = false
+        onTripCreated()
+    }
+}
