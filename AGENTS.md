@@ -13,19 +13,9 @@
 
 ## 빌드·실행·테스트
 
-Xcode가 설치된 macOS의 저장소 루트에서 실행합니다. `SIMULATOR_UUID`는 조회 결과의 실제 UUID로 바꿉니다.
-
-```sh
-xcodebuild -project TripJJIM.xcodeproj -scheme TripJJIM -configuration Debug \
-  -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath .build/TripJJIM CODE_SIGNING_ALLOWED=NO build
-xcrun simctl list devices available
-bash scripts/run-simulator.sh SIMULATOR_UUID
-```
-
-테스트는 위 명령의 destination을 `'platform=iOS Simulator,id=SIMULATOR_UUID'`, 마지막 `build`를 `test`로 바꿉니다. 스크립트는 빌드·설치·실행을 수행하며 로컬 환경의 Build 액션에 연결할 수 있습니다.
-
-변경 영향에 맞는 검증을 선택하고, 완료 시 실행한 명령·결과와 미실행 항목의 이유를 보고합니다. 문서만 변경하면 경로·명령·링크와 `git diff --check`를 확인합니다.
+1. 변경 영향에 맞는 최소한의 검증을 수행합니다.
+2. 전체 테스트는 명시적인 요청이나 구체적인 필요가 있을 때만 실행합니다.
+3. 필요한 검증이 통과하면 종료하며, 변경이나 새로운 문제가 없으면 반복하지 않습니다.
 
 ## 작업별 참고
 
