@@ -2,7 +2,6 @@ import SwiftUI
 
 struct TripDetailView: View {
     @Environment(TripStore.self) private var store
-    @Environment(AppRouter.self) private var router
     let tripID: Trip.ID
     @Environment(\.dismiss) private var dismiss
     @State private var tripEditor: TripEditorRoute?
@@ -12,6 +11,8 @@ struct TripDetailView: View {
     @State private var nearbySearchCoordinate: PlaceCoordinate?
     @State private var pendingPlace: PlaceSearchResult?
     @State private var mapDay: Date?
+    @State private var showingMap = false
+    @State private var openMapAfterSearch = false
 
     private struct Editor: Identifiable {
         var id: Visit.ID { visit.id }
@@ -41,17 +42,23 @@ struct TripDetailView: View {
                     detailVisitID = nil
                 }
             }
+            .navigationDestination(isPresented: $showingMap) {
+                TripMapTripView(tripID: tripID, initialDay: selectedDay(for: trip))
+            }
             .navigationTitle(trip.name)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Menu {
-                        Button("여행 수정", systemImage: "pencil") { tripEditor = .edit(trip) }
-                        Button("여행 삭제", systemImage: "trash", role: .destructive) { isDeletingTrip = true }
-                    } label: {
-                        Label("여행 관리", systemImage: "ellipsis.circle")
+                if !showingMap {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        Menu {
+                            Button("여행 수정", systemImage: "pencil") { tripEditor = .edit(trip) }
+                            Button("여행 삭제", systemImage: "trash", role: .destructive) { isDeletingTrip = true }
+                        } label: {
+                            Label("여행 관리", systemImage: "ellipsis.circle")
+                        }
+                        Button { showingMap = true } label: { Label("지도", systemImage: "map") }
+                        Button { openPlaceSearch(near: nil) } label: { Label("장소 검색", systemImage: "magnifyingglass") }
                     }
-                    Button { openPlaceSearch(near: nil) } label: { Label("장소 검색", systemImage: "magnifyingglass") }
                 }
             }
             .sheet(item: $tripEditor) { route in
@@ -65,13 +72,13 @@ struct TripDetailView: View {
             } message: {
                 Text("‘\(trip.name)’의 모든 방문 일정과 알림도 함께 삭제됩니다.")
             }
-            .sheet(isPresented: $searchingPlace, onDismiss: openSelectedPlace) {
+            .sheet(isPresented: $searchingPlace, onDismiss: finishPlaceSearch) {
                 NavigationStack {
                     PlaceSearchView(
                         region: trip.region,
                         nearby: nearbySearchCoordinate,
                         tripRegionLocation: trip.regionLocation,
-                        onShowMap: { router.showMap(for: tripID) }
+                        onShowMap: { openMapAfterSearch = true }
                     ) { pendingPlace = $0 }
                 }
             }
@@ -159,7 +166,13 @@ struct TripDetailView: View {
         searchingPlace = true
     }
 
-    private func openSelectedPlace() {
+    private func finishPlaceSearch() {
+        if openMapAfterSearch {
+            openMapAfterSearch = false
+            showingMap = true
+            return
+        }
+
         guard let place = pendingPlace else { return }
         pendingPlace = nil
         startAddingVisit(at: place.coordinate, name: place.name, address: place.address)
@@ -225,7 +238,7 @@ struct TripDetailView: View {
                 } description: {
                     Text("지도에서 이 날짜에 방문할 장소를 추가해 보세요.")
                 } actions: {
-                    Button("지도에서 장소 추가") { router.showMap(for: tripID) }
+                    Button("지도에서 장소 추가") { showingMap = true }
                         .buttonStyle(.borderedProminent)
                 }
                     .listRowBackground(Color.clear)

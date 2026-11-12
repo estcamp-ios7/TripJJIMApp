@@ -2,63 +2,7 @@ import MapKit
 import OSLog
 import SwiftUI
 
-struct TripMapTabView: View {
-    @Environment(TripStore.self) private var store
-    @Binding var path: [Trip.ID]
-
-    var body: some View {
-        NavigationStack(path: $path) {
-            List(store.trips) { trip in
-                NavigationLink(value: trip.id) {
-                    Label {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(trip.name)
-                                .font(.headline)
-                            if let region = trip.region, !region.isEmpty {
-                                Text(region)
-                                    .font(.subheadline)
-                                    .readableSecondaryForeground()
-                            }
-                        }
-                    } icon: {
-                        Image(systemName: "map.fill")
-                            .foregroundStyle(Color.tripAccent)
-                    }
-                }
-            }
-            .overlay {
-                if store.trips.isEmpty {
-                    ContentUnavailableView(
-                        "지도로 볼 여행이 없어요",
-                        systemImage: "map",
-                        description: Text("홈에서 여행을 먼저 만들어 주세요.")
-                    )
-                }
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                TripMapSubtitle()
-                    .padding(.horizontal, 16)
-                    .padding(.top, 6)
-                    .padding(.bottom, 20)
-            }
-            .navigationTitle("지도")
-            .navigationDestination(for: Trip.ID.self) { tripID in
-                TripMapTripView(tripID: tripID)
-            }
-        }
-    }
-}
-
-private struct TripMapSubtitle: View {
-    var body: some View {
-        Text("어디를 둘러볼까요?")
-            .font(.title3.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct TripMapTripView: View {
+struct TripMapTripView: View {
     @Environment(TripStore.self) private var store
     let tripID: Trip.ID
 
@@ -68,6 +12,11 @@ private struct TripMapTripView: View {
     @State private var nearbySearchCoordinate: PlaceCoordinate?
     @State private var pendingPlace: PlaceSearchResult?
     @State private var detailVisitID: Visit.ID?
+
+    init(tripID: Trip.ID, initialDay: Date) {
+        self.tripID = tripID
+        _mapDay = State(initialValue: initialDay)
+    }
 
     private struct Editor: Identifiable {
         var id: Visit.ID { visit.id }
