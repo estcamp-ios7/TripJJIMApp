@@ -9,20 +9,31 @@ struct VisitEditorView: View {
     @State private var memo: String
     @State private var searchingPlace = false
     @State private var saveError: String?
+    @State private var isDeleting = false
+    @State private var deleteFailed = false
 
     private let region: String?
     private let tripRegionLocation: TripRegionLocation?
     private let original: Visit
     private let isNew: Bool
+    private let onDelete: (() -> Bool)?
     private let onSave: (Visit) -> Bool
 
-    init(visit: Visit, isNew: Bool, region: String?, tripRegionLocation: TripRegionLocation? = nil, onSave: @escaping (Visit) -> Bool) {
+    init(
+        visit: Visit,
+        isNew: Bool,
+        region: String?,
+        tripRegionLocation: TripRegionLocation? = nil,
+        onDelete: (() -> Bool)? = nil,
+        onSave: @escaping (Visit) -> Bool
+    ) {
         _visit = State(initialValue: visit)
         _memo = State(initialValue: visit.memo ?? "")
         self.region = region
         self.tripRegionLocation = tripRegionLocation
         original = visit
         self.isNew = isNew
+        self.onDelete = onDelete
         self.onSave = onSave
     }
 
@@ -52,6 +63,13 @@ struct VisitEditorView: View {
                         .accessibilityIdentifier("visit-memo")
                 }
                 reminderSection
+                if !isNew, onDelete != nil {
+                    Section {
+                        Button("일정 삭제", systemImage: "trash", role: .destructive) {
+                            isDeleting = true
+                        }
+                    }
+                }
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle(isNew ? "방문 일정 추가" : "방문 일정 수정")
@@ -83,6 +101,15 @@ struct VisitEditorView: View {
                 Text(saveError ?? "")
             }
             .interactiveDismissDisabled(isRequestingPermission)
+            .alert("방문 일정을 삭제할까요?", isPresented: $isDeleting) {
+                Button("취소", role: .cancel) {}
+                Button("삭제", role: .destructive, action: deleteVisit)
+            } message: {
+                Text("‘\(original.placeName)’ 일정의 알림도 함께 삭제됩니다.")
+            }
+            .alert("일정을 삭제할 수 없어요", isPresented: $deleteFailed) {
+                Button("확인", role: .cancel) {}
+            }
             .alert("방문 알림", isPresented: Binding(
                 get: { reminderMessage != nil },
                 set: { if !$0 { reminderMessage = nil } }
@@ -151,6 +178,14 @@ struct VisitEditorView: View {
                 visit.reminderEnabled = false
                 reminderMessage = "알림 권한을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요."
             }
+        }
+    }
+
+    private func deleteVisit() {
+        if onDelete?() == true {
+            dismiss()
+        } else {
+            deleteFailed = true
         }
     }
 

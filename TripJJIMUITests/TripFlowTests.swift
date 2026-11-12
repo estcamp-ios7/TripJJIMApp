@@ -326,8 +326,12 @@ final class TripFlowTests: XCTestCase {
         app.swipeUp()
         tapSwitch("visit-reminder", in: app)
         app.buttons["저장"].tap()
+        XCTAssertTrue(app.navigationBars["방문 일정 상세"].waitForExistence(timeout: 5))
 
         let row = app.buttons["visit-row-\(editedPlace)"]
+        let edit = app.buttons["수정"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        edit.tap()
         let delete = app.buttons["일정 삭제"]
         if !delete.isHittable { app.swipeUp() }
         delete.tap()
@@ -366,7 +370,7 @@ final class TripFlowTests: XCTestCase {
         app.buttons["상세 보기"].tap()
         XCTAssertTrue(app.navigationBars["방문 일정 상세"].waitForExistence(timeout: 5))
         attachScreen("Visit detail", in: app)
-        app.buttons["일정 수정"].tap()
+        app.buttons["수정"].tap()
         let memo = app.textFields["visit-memo"]
         if !memo.isHittable { app.swipeUp() }
         XCTAssertTrue(memo.waitForExistence(timeout: 5))
@@ -375,14 +379,14 @@ final class TripFlowTests: XCTestCase {
         app.buttons["저장"].tap()
         XCTAssertTrue(app.staticTexts[firstMemo].waitForExistence(timeout: 5))
 
-        app.buttons["일정 수정"].tap()
+        app.buttons["수정"].tap()
         if !memo.isHittable { app.swipeUp() }
         memo.tap()
         memo.typeText(" discarded")
         app.buttons["취소"].tap()
         XCTAssertTrue(app.staticTexts[firstMemo].waitForExistence(timeout: 5))
 
-        app.buttons["일정 수정"].tap()
+        app.buttons["수정"].tap()
         if !memo.isHittable { app.swipeUp() }
         memo.tap()
         memo.typeText(" edited")
@@ -402,6 +406,8 @@ final class TripFlowTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["방문 일정 상세"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts[editedMemo].waitForExistence(timeout: 5))
         attachScreen("Visit detail with memo", in: app)
+        XCTAssertFalse(app.buttons["일정 삭제"].exists)
+        app.buttons["수정"].tap()
         if !app.buttons["일정 삭제"].isHittable { app.swipeUp() }
         app.buttons["일정 삭제"].tap()
         app.alerts.buttons["삭제"].tap()
@@ -424,7 +430,7 @@ final class TripFlowTests: XCTestCase {
             XCTAssertTrue(row.waitForExistence(timeout: 5))
             row.tap()
         }
-        let edit = app.buttons["일정 수정"]
+        let edit = app.buttons["수정"]
         XCTAssertTrue(edit.waitForExistence(timeout: 5))
         edit.tap()
     }

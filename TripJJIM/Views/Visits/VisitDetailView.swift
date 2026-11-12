@@ -7,8 +7,6 @@ struct VisitDetailView: View {
     let visitID: Visit.ID
     let onDeleted: () -> Void
     @State private var editing: Visit?
-    @State private var isDeleting = false
-    @State private var deleteFailed = false
 
     var body: some View {
         Group {
@@ -21,6 +19,14 @@ struct VisitDetailView: View {
         }
         .navigationTitle("방문 일정 상세")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if let trip = store.trip(withID: tripID),
+                   let visit = trip.visits.first(where: { $0.id == visitID }) {
+                    Button("수정") { editing = visit }
+                }
+            }
+        }
     }
 
     private func detail(for visit: Visit, region: String?, tripRegionLocation: TripRegionLocation?) -> some View {
@@ -50,31 +56,22 @@ struct VisitDetailView: View {
                     Text("작성한 메모가 없어요.").readableSecondaryForeground()
                 }
             }
-            Section {
-                Button("일정 수정", systemImage: "pencil") { editing = visit }
-                Button("일정 삭제", systemImage: "trash", role: .destructive) { isDeleting = true }
-            }
         }
         .listStyle(.insetGrouped)
         .sheet(item: $editing) { draft in
-            VisitEditorView(visit: draft, isNew: false, region: region, tripRegionLocation: tripRegionLocation) { updated in
+            VisitEditorView(
+                visit: draft,
+                isNew: false,
+                region: region,
+                tripRegionLocation: tripRegionLocation,
+                onDelete: {
+                    guard store.deleteVisit(visitID, in: tripID) else { return false }
+                    onDeleted()
+                    return true
+                }
+            ) { updated in
                 store.saveVisit(updated, in: tripID)
             }
-        }
-        .alert("방문 일정을 삭제할까요?", isPresented: $isDeleting) {
-            Button("취소", role: .cancel) {}
-            Button("삭제", role: .destructive) {
-                if store.deleteVisit(visitID, in: tripID) {
-                    onDeleted()
-                } else {
-                    deleteFailed = true
-                }
-            }
-        } message: {
-            Text("‘\(visit.placeName)’ 일정의 알림도 함께 삭제됩니다.")
-        }
-        .alert("일정을 삭제할 수 없어요", isPresented: $deleteFailed) {
-            Button("확인", role: .cancel) {}
         }
     }
 
