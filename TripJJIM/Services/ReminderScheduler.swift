@@ -50,7 +50,7 @@ struct ReminderScheduler {
                 from: visit.reminderDate
             )
             let content = UNMutableNotificationContent()
-            content.title = "TripJJIM 방문 알림"
+            content.title = "TripJJIM 일정 알림"
             content.body = body
             content.sound = .default
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)

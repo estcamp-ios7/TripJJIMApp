@@ -274,7 +274,7 @@ final class TripFlowTests: XCTestCase {
         openTrip(trip, in: app)
         editVisit(place, in: app)
         XCTAssertEqual(app.buttons["reminder-preset"].value as? String, "10분 전")
-        for preset in ["30분 전", "1시간 전", "방문 시간", "10분 전"] {
+        for preset in ["30분 전", "1시간 전", "방문 시각", "10분 전"] {
             selectPreset(preset, in: app)
             app.buttons["저장"].tap()
             let summary = app.descendants(matching: .any).matching(identifier: "visit-detail-reminder").firstMatch
@@ -629,6 +629,6 @@ final class ReminderModelTests: XCTestCase {
         XCTAssertFalse(visit.hasPastReminderChange(from: saved, now: date.addingTimeInterval(60)))
         XCTAssertEqual(visit.reminderBody, "새 카페 방문 10분 전입니다.")
         visit.selectedReminderPreset = .custom
-        XCTAssertEqual(visit.reminderBody, "새 카페 방문 알림입니다.")
+        XCTAssertEqual(visit.reminderBody, "새 카페 일정 알림입니다.")
     }
 }
