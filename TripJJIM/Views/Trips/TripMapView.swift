@@ -84,6 +84,7 @@ private struct TripMapTripView: View {
                 TripMapView(
                     trip: trip,
                     selectedDay: selectedDayBinding(for: trip),
+                    isShowingVisitDetail: detailVisitID != nil,
                     onAdd: { coordinate, name, address in
                         startAddingVisit(at: coordinate, name: name ?? "", address: address)
                     },
@@ -95,8 +96,8 @@ private struct TripMapTripView: View {
             .navigationTitle(trip.name)
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(item: $detailVisitID) { visitID in
-                VisitDetailView(tripID: tripID, visitID: visitID) { date in
-                    mapDay = Calendar.current.startOfDay(for: date)
+                VisitDetailView(tripID: tripID, visitID: visitID) {
+                    detailVisitID = nil
                 }
             }
             .sheet(isPresented: $searchingPlace, onDismiss: openSelectedPlace) {
@@ -126,6 +127,7 @@ private struct TripMapTripView: View {
     }
 
     private func showVisit(_ visit: Visit) {
+        mapDay = Calendar.current.startOfDay(for: visit.visitDate)
         detailVisitID = visit.id
     }
 
@@ -195,7 +197,7 @@ private struct TripMapTripView: View {
 
     private func startAddingVisit(at coordinate: PlaceCoordinate, name: String = "", address: String? = nil) {
         guard let trip = store.trip(withID: tripID) else { return }
-        let day = mapDay ?? defaultMapDay(for: trip)
+        let day = selectedDay(for: trip)
         let calendar = Calendar.current
         let date = calendar.isDateInToday(day)
             ? calendar.nextDate(after: .now, matching: DateComponents(minute: 0, second: 0), matchingPolicy: .nextTime)
@@ -210,6 +212,7 @@ private struct TripMapTripView: View {
 struct TripMapView: View {
     let trip: Trip
     @Binding var selectedDay: Date
+    let isShowingVisitDetail: Bool
     let onAdd: (PlaceCoordinate, String?, String?) -> Void
     let onEdit: (Visit) -> Void
     let onDetail: (Visit) -> Void
@@ -382,7 +385,9 @@ struct TripMapView: View {
             }
         }
         .onChange(of: cameraContext) { previous, current in
-            if previous.day != current.day || (!position.positionedByUser && locationFocusID != focusID) {
+            if previous.day != current.day {
+                focusOnSavedPlaces()
+            } else if !isShowingVisitDetail && !position.positionedByUser && locationFocusID != focusID {
                 focusOnSavedPlaces()
             }
         }

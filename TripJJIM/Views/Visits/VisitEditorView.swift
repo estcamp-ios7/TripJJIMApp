@@ -7,6 +7,8 @@ struct VisitEditorView: View {
     @State private var isRequestingPermission = false
     @State private var reminderMessage: String?
     @State private var memo: String
+    @State private var searchingPlace = false
+    @State private var saveError: String?
 
     private let region: String?
     private let tripRegionLocation: TripRegionLocation?
@@ -35,12 +37,8 @@ struct VisitEditorView: View {
                             .font(.subheadline)
                             .readableSecondaryForeground()
                     }
-                    NavigationLink {
-                        PlaceSearchView(region: region, tripRegionLocation: tripRegionLocation) { place in
-                            visit.placeName = place.name
-                            visit.coordinate = place.coordinate
-                            visit.address = place.address
-                        }
+                    Button {
+                        searchingPlace = true
                     } label: {
                         Label(isNew ? "장소 검색" : "장소 변경", systemImage: "magnifyingglass")
                     }
@@ -66,6 +64,23 @@ struct VisitEditorView: View {
                     Button("저장", action: save)
                         .disabled(cleanName.isEmpty || isRequestingPermission)
                 }
+            }
+            .sheet(isPresented: $searchingPlace) {
+                NavigationStack {
+                    PlaceSearchView(region: region, tripRegionLocation: tripRegionLocation) { place in
+                        visit.placeName = place.name
+                        visit.coordinate = place.coordinate
+                        visit.address = place.address
+                    }
+                }
+            }
+            .alert("일정을 저장할 수 없어요", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("확인", role: .cancel) {}
+            } message: {
+                Text(saveError ?? "")
             }
             .interactiveDismissDisabled(isRequestingPermission)
             .alert("방문 알림", isPresented: Binding(
@@ -154,6 +169,11 @@ struct VisitEditorView: View {
             return
         }
         visit.memo = memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : memo
-        if onSave(visit) { dismiss() }
+        if onSave(visit) {
+            dismiss()
+        } else {
+            saveError = store.storageError ?? "여행이 여전히 있는지 확인하고 다시 시도해 주세요."
+            store.storageError = nil
+        }
     }
 }

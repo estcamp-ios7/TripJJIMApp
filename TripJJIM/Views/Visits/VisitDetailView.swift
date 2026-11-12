@@ -3,10 +3,9 @@ import SwiftUI
 
 struct VisitDetailView: View {
     @Environment(TripStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
     let tripID: Trip.ID
     let visitID: Visit.ID
-    let onSaved: (Date) -> Void
+    let onDeleted: () -> Void
     @State private var editing: Visit?
     @State private var isDeleting = false
     @State private var deleteFailed = false
@@ -59,16 +58,14 @@ struct VisitDetailView: View {
         .listStyle(.insetGrouped)
         .sheet(item: $editing) { draft in
             VisitEditorView(visit: draft, isNew: false, region: region, tripRegionLocation: tripRegionLocation) { updated in
-                guard store.saveVisit(updated, in: tripID) else { return false }
-                onSaved(updated.visitDate)
-                return true
+                store.saveVisit(updated, in: tripID)
             }
         }
         .alert("방문 일정을 삭제할까요?", isPresented: $isDeleting) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
                 if store.deleteVisit(visitID, in: tripID) {
-                    dismiss()
+                    onDeleted()
                 } else {
                     deleteFailed = true
                 }
@@ -125,7 +122,7 @@ struct VisitDetailView: View {
     }()
 
     NavigationStack {
-        VisitDetailView(tripID: trip.id, visitID: visit.id) { _ in }
+        VisitDetailView(tripID: trip.id, visitID: visit.id) {}
     }
     .environment(store)
 }
