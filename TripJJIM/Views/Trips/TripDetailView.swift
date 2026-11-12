@@ -37,8 +37,8 @@ struct TripDetailView: View {
                 itinerary(for: trip, on: selectedDay(for: trip))
             }
             .navigationDestination(item: $detailVisitID) { id in
-                VisitDetailView(tripID: tripID, visitID: id) { date in
-                    mapDay = Calendar.current.startOfDay(for: date)
+                VisitDetailView(tripID: tripID, visitID: id) {
+                    detailVisitID = nil
                 }
             }
             .navigationTitle(trip.name)
@@ -95,6 +95,7 @@ struct TripDetailView: View {
     }
 
     private func showVisit(_ visit: Visit) {
+        mapDay = Calendar.current.startOfDay(for: visit.visitDate)
         detailVisitID = visit.id
     }
 
@@ -166,7 +167,7 @@ struct TripDetailView: View {
 
     private func startAddingVisit(at coordinate: PlaceCoordinate, name: String = "", address: String? = nil) {
         guard let trip = store.trip(withID: tripID) else { return }
-        let day = mapDay ?? defaultMapDay(for: trip)
+        let day = selectedDay(for: trip)
         let calendar = Calendar.current
         let date = calendar.isDateInToday(day)
             ? calendar.nextDate(after: .now, matching: DateComponents(minute: 0, second: 0), matchingPolicy: .nextTime)
