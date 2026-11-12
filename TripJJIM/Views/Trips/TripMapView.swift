@@ -217,6 +217,11 @@ struct TripMapView: View {
     private let selectionLog = Logger(subsystem: "com.tripjjim.TripJJIM", category: "MapSelection")
 
     @State private var position: MapCameraPosition = .region(Self.region(around: .seoul))
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var visibleCamera: MapCamera?
+    @State private var didSetInitialCamera = false
+    private static let selectionDistance: Double = 1_500
+
     @State private var draftCoordinate: PlaceCoordinate?
     @State private var draftAddress: String?
     @State private var draftName: String?
@@ -284,6 +289,7 @@ struct TripMapView: View {
                 .buttonStyle(.bordered)
                 .accessibilityLabel("장소 검색")
                 Button {
+                    pendingTap?.cancel()
                     cancelRegionFocus()
                     locationFocusID = focusID
                     location.requestCurrentLocation()
@@ -337,6 +343,9 @@ struct TripMapView: View {
                         .annotationTitles(.hidden)
                     }
                 }
+                .onMapCameraChange { context in
+                    visibleCamera = context.camera
+                }
                 .mapControls {}
                 .mapFeatureSelectionAccessory(nil)
                 .mapFeatureSelectionDisabled { $0.kind != .pointOfInterest }
@@ -348,7 +357,16 @@ struct TripMapView: View {
 
             mapFooter
         }
-        .onAppear { focusOnSavedPlaces() }
+        .onAppear {
+            guard !didSetInitialCamera else { return }
+            didSetInitialCamera = true
+            focusOnSavedPlaces()
+        }
+        .onChange(of: position.positionedByUser) { _, positionedByUser in
+            guard positionedByUser else { return }
+            pendingTap?.cancel()
+            cancelRegionFocus()
+        }
         .task(id: draftID) {
             guard let draftCoordinate else { return }
             await resolveDraft(at: draftCoordinate, feature: draftFeature, id: draftID)
@@ -363,13 +381,19 @@ struct TripMapView: View {
                 self.selectedVisitID = nil
             }
         }
-        .onChange(of: cameraContext) { focusOnSavedPlaces() }
+        .onChange(of: cameraContext) { previous, current in
+            if previous.day != current.day || (!position.positionedByUser && locationFocusID != focusID) {
+                focusOnSavedPlaces()
+            }
+        }
         .onDisappear {
             pendingTap?.cancel()
             cancelRegionFocus()
         }
         .onChange(of: location.currentCoordinate) { _, coordinate in
-            if let coordinate, locationFocusID == focusID { moveMap(to: coordinate) }
+            guard let coordinate, locationFocusID == focusID else { return }
+            locationFocusID = nil
+            moveMap(to: coordinate)
         }
         .alert("내 위치", isPresented: Binding(
             get: { location.message != nil },
@@ -460,16 +484,16 @@ struct TripMapView: View {
         pendingTap?.cancel()
         let selectionID = nativeSelectionID
         let tappedAt = ContinuousClock.now
+        if let featureSelectedAt, featureSelectedAt.duration(to: tappedAt) < .milliseconds(180),
+           let feature = mapSelection?.feature,
+           let marker = proxy.convert(feature.coordinate, to: .local),
+           hypot(point.x - marker.x, point.y - marker.y) < 44 {
+            return
+        }
         pendingTap = Task {
             // Give the native map selection first chance to claim this tap.
             try? await Task.sleep(for: .milliseconds(180))
             guard !Task.isCancelled, nativeSelectionID == selectionID else { return }
-            if let featureSelectedAt, featureSelectedAt.duration(to: tappedAt) < .milliseconds(180),
-               let feature = mapSelection?.feature,
-               let marker = proxy.convert(feature.coordinate, to: .local),
-               hypot(point.x - marker.x, point.y - marker.y) < 44 {
-                return
-            }
             mapTapped(at: point, using: proxy)
         }
     }
@@ -483,6 +507,21 @@ struct TripMapView: View {
         draftAddress = nil
         lookingUpAddress = true
         draftID = UUID()
+        focusOnDraft(at: coordinate)
+    }
+
+    private func focusOnDraft(at coordinate: CLLocationCoordinate2D) {
+        let current = position.camera ?? visibleCamera
+        let camera = MapCamera(
+            centerCoordinate: coordinate,
+            distance: min(current?.distance ?? Self.selectionDistance, Self.selectionDistance),
+            heading: current?.heading ?? 0,
+            pitch: current?.pitch ?? 0
+        )
+        // The footer is outside the map, so its center stays above the place information.
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) {
+            position = .camera(camera)
+        }
     }
 
     private func clearDraft() {
@@ -583,7 +622,7 @@ struct TripMapView: View {
             let requestID = focusID
             Task {
                 let location = try? await service.resolve(entry)
-                guard administrativeSearch === service, focusID == requestID else { return }
+                guard administrativeSearch === service, focusID == requestID, !position.positionedByUser else { return }
                 administrativeSearch = nil
                 if let location {
                     withAnimation { position = .region(location.mapRegion) }
@@ -605,7 +644,7 @@ struct TripMapView: View {
         regionSearch = search
         Task {
             let response = try? await search.start()
-            guard regionSearch === search, focusID == requestID else { return }
+            guard regionSearch === search, focusID == requestID, !position.positionedByUser else { return }
             regionSearch = nil
             guard let point = response?.mapItems.first?.location.coordinate else {
                 moveMap(to: .seoul)
