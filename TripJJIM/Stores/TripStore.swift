@@ -127,7 +127,7 @@ final class TripStore {
             do {
                 try await reminders.reconcile(with: visits)
             } catch {
-                self?.reminderError = "일정은 저장됐지만 iOS에 방문 알림을 등록하지 못했습니다. 앱을 다시 열면 시간이 지나지 않은 알림을 다시 시도합니다."
+                self?.reminderError = "일정은 저장됐지만 iOS에 일정 알림을 등록하지 못했습니다. 앱을 다시 열면 시간이 지나지 않은 알림을 다시 시도합니다."
             }
         }
     }

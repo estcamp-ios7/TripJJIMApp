@@ -21,7 +21,7 @@ enum ReminderPreset: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .atVisit: "방문 시간"
+        case .atVisit: "방문 시각"
         case .tenMinutesBefore: "10분 전"
         case .thirtyMinutesBefore: "30분 전"
         case .oneHourBefore: "1시간 전"
@@ -69,8 +69,8 @@ struct Visit: Codable, Identifiable, Equatable {
 
     var reminderBody: String {
         switch selectedReminderPreset {
-        case .atVisit: "\(placeName) 방문 시간입니다."
-        case .custom: "\(placeName) 방문 알림입니다."
+        case .atVisit: "\(placeName) 방문 시각입니다."
+        case .custom: "\(placeName) 일정 알림입니다."
         default: "\(placeName) 방문 \(selectedReminderPreset.title)입니다."
         }
     }

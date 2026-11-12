@@ -55,7 +55,7 @@ struct VisitEditorView: View {
                     }
                     DatePicker("방문 날짜", selection: $visit.visitDate, displayedComponents: .date)
                         .accessibilityIdentifier("visit-date")
-                    DatePicker("방문 시간", selection: $visit.visitDate, displayedComponents: .hourAndMinute)
+                    DatePicker("방문 시각", selection: $visit.visitDate, displayedComponents: .hourAndMinute)
                 }
                 Section("방문 메모") {
                     TextField("메모를 입력해 주세요", text: $memo, axis: .vertical)
@@ -110,7 +110,7 @@ struct VisitEditorView: View {
             .alert("일정을 삭제할 수 없어요", isPresented: $deleteFailed) {
                 Button("확인", role: .cancel) {}
             }
-            .alert("방문 알림", isPresented: Binding(
+            .alert("일정 알림", isPresented: Binding(
                 get: { reminderMessage != nil },
                 set: { if !$0 { reminderMessage = nil } }
             )) {
@@ -123,7 +123,7 @@ struct VisitEditorView: View {
 
     private var reminderSection: some View {
         Section {
-            Toggle("방문 알림", isOn: Binding(
+            Toggle("일정 알림", isOn: Binding(
                 get: { visit.reminderEnabled },
                 set: setReminderEnabled
             ))
@@ -150,14 +150,11 @@ struct VisitEditorView: View {
                     DatePicker("알림 시간", selection: date, displayedComponents: .hourAndMinute)
                         .accessibilityIdentifier("reminder-time")
                 }
-
-                LabeledContent("알림 예정", value: "\(visit.reminderDate.dayLabel) \(visit.reminderDate.timeLabel)")
-                    .accessibilityIdentifier("reminder-preview")
             }
         } header: {
             Text("알림")
         } footer: {
-            Text("알림은 일정을 저장할 때 한 번 예약됩니다.")
+            Text("선택한 일시에 한 번 알림을 보내드려요.")
         }
     }
 
@@ -172,7 +169,7 @@ struct VisitEditorView: View {
             do {
                 if try await !store.requestReminderPermission() {
                     visit.reminderEnabled = false
-                    reminderMessage = "설정에서 TripJJIM의 알림을 허용하면 방문 알림을 켤 수 있습니다."
+                    reminderMessage = "설정에서 TripJJIM의 알림을 허용하면 일정 알림을 켤 수 있습니다."
                 }
             } catch {
                 visit.reminderEnabled = false
