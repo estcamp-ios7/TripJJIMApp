@@ -32,6 +32,12 @@ struct RecommendedCourseImportView: View {
                     DatePicker("시작일", selection: $startDate, displayedComponents: .date)
                         .accessibilityIdentifier("course-import-start")
                     LabeledContent("종료일", value: endDate?.dayLabel ?? "계산할 수 없어요")
+                    LabeledContent("여행 기간") {
+                        Text(endDate == nil ? "계산할 수 없어요" : course.duration)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.primary)
+                            .accessibilityIdentifier("course-import-duration")
+                    }
                 }
                 Section {
                     Text("모든 장소를 저장해요. 위치가 없는 장소는 저장 후 장소 검색에서 지정할 수 있어요.")
@@ -66,16 +72,18 @@ struct RecommendedCourseImportView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                RecommendedCourseAction(title: "여행 만들기", icon: "suitcase.fill",
+                                        isWorking: isSaving, action: save)
+                    .disabled(isSaving || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || endDate == nil)
+                    .accessibilityIdentifier("save-imported-course")
+            }
             .navigationTitle("추천 코스 가져오기")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("취소") { dismiss() }.disabled(isSaving)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("여행 저장", action: save)
-                        .disabled(isSaving || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || endDate == nil)
-                        .accessibilityIdentifier("save-imported-course")
                 }
             }
             .interactiveDismissDisabled(isSaving)

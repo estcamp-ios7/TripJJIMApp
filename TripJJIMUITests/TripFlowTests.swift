@@ -89,10 +89,17 @@ final class TripFlowTests: XCTestCase {
         XCTAssertTrue(course.waitForExistence(timeout: 10))
         course.tap()
         let start = app.buttons["start-course-import"]
-        for _ in 0..<5 where !start.isHittable { app.swipeUp() }
+        XCTAssertTrue(start.waitForExistence(timeout: 5))
+        XCTAssertTrue(start.isHittable)
+        attachScreen("Course detail action", in: app)
         start.tap()
         let field = app.textFields["course-import-title"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))
+        let duration = app.staticTexts["course-import-duration"]
+        XCTAssertTrue(duration.exists)
+        XCTAssertTrue(duration.label.contains("1박 2일"), duration.label)
+        XCTAssertTrue(app.buttons["save-imported-course"].isHittable)
+        XCTAssertFalse(app.navigationBars.buttons["여행 저장"].exists)
         attachScreen("Course import preview", in: app)
         app.buttons["취소"].tap()
         XCTAssertTrue(app.navigationBars["코스 상세"].waitForExistence(timeout: 5))

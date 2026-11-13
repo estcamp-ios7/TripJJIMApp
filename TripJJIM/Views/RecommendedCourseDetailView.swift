@@ -54,14 +54,16 @@ struct RecommendedCourseDetailView: View {
                         RecommendedCourseMap(pins: pins)
                     }
                 }
-                Button("이 코스로 여행 만들기") { isImporting = true }
-                    .buttonStyle(.borderedProminent)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityIdentifier("start-course-import")
             }
             .padding(20)
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            RecommendedCourseAction(title: "이 코스로 여행 만들기", icon: "suitcase.fill") {
+                isImporting = true
+            }
+            .accessibilityIdentifier("start-course-import")
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("코스 상세")
@@ -145,5 +147,45 @@ private struct RecommendedCourseMap: View {
         .frame(height: 240)
         .clipShape(.rect(cornerRadius: 16))
         .accessibilityIdentifier("recommended-course-map")
+    }
+}
+
+struct RecommendedCourseAction: View {
+    @Environment(\.isEnabled) private var isEnabled
+
+    let title: String
+    let icon: String
+    var isWorking = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if isWorking {
+                    ProgressView().tint(.white).accessibilityHidden(true)
+                    Text("여행을 만드는 중")
+                } else {
+                    Label(title, systemImage: icon)
+                }
+            }
+            .font(.headline)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background(
+                Color.tripAccent.mix(with: .black, by: 0.38)
+                    .opacity(isEnabled || isWorking ? 1 : 0.48),
+                in: .rect(cornerRadius: 16)
+            )
+            .contentShape(.rect(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: 520)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
+        .background(.bar)
     }
 }
