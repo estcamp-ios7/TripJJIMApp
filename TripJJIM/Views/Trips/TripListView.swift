@@ -174,6 +174,20 @@ struct TripListView: View {
     }
 }
 
+#Preview("여행 목록") {
+    @Previewable @State var path: [Trip.ID] = []
+
+    TripListView(path: $path)
+        .environment(PreviewData.makeStore())
+}
+
+#Preview("여행 목록 · 비어 있음") {
+    @Previewable @State var path: [Trip.ID] = []
+
+    TripListView(path: $path)
+        .environment(PreviewData.makeStore(trips: []))
+}
+
 private struct TripListSubtitle: View {
     var body: some View {
         Text("어디로 떠나시나요?")

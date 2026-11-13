@@ -7,20 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D81AE0B2F0974C8CA319A000 /* RecommendedCourseImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */; };
-		FF1F30E8F9AE49EEB459806C /* RecommendedCourses.json in Resources */ = {isa = PBXBuildFile; fileRef = F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */; };
-		165B670BC19A4EF7B51AD8C2 /* RecommendedCourses.json in Resources */ = {isa = PBXBuildFile; fileRef = F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */; };
-		F9FD1B9F29364611B06CF323 /* RecommendedCourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */; };
-		FCB46A9F2C2F4DB8BA415AC1 /* RecommendedCourseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C2A66866854242B0E343EC /* RecommendedCourseListView.swift */; };
-		ED4A87DA33484CA0B30F7031 /* RecommendedCourseCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E60616B8D6439CA895AC46 /* RecommendedCourseCatalog.swift */; };
-		865C3988E39A409AB92F06E6 /* RecommendedCourseCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E60616B8D6439CA895AC46 /* RecommendedCourseCatalog.swift */; };
-		4C1C10F8954241D5AD94702C /* RecommendedCourse.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73494BB42B24DE0A248B05D /* RecommendedCourse.swift */; };
-		EE737982CA8045D082B3DBAF /* RecommendedCourse.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73494BB42B24DE0A248B05D /* RecommendedCourse.swift */; };
-		7C176064013B4A4595B326A9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F12F3C48774883BB27A292 /* HomeView.swift */; };
 		0D2178503F724437A893267B /* TripJJIMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */; };
+		165B670BC19A4EF7B51AD8C2 /* RecommendedCourses.json in Resources */ = {isa = PBXBuildFile; fileRef = F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */; };
 		29BC588330A4AD6300956A0B /* ReadableSecondaryForeground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */; };
+		29CA9E2C30A6A8DE004560D2 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29CA9E2B30A6A8DE004560D2 /* PreviewData.swift */; };
+		4C1C10F8954241D5AD94702C /* RecommendedCourse.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73494BB42B24DE0A248B05D /* RecommendedCourse.swift */; };
 		7C176064013B4A4595B326A9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F12F3C48774883BB27A292 /* HomeView.swift */; };
 		83FAFBFB4BB08D8866CBACBE /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */; };
+		865C3988E39A409AB92F06E6 /* RecommendedCourseCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E60616B8D6439CA895AC46 /* RecommendedCourseCatalog.swift */; };
 		8FF572239A30426289D362A2 /* TripEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D98DD9467E2437397444A0F /* TripEditorView.swift */; };
 		913CD84084274142B0D0F421 /* PlaceSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */; };
 		996864B393DDC3C72282DE5A /* TripStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EE8FD6F4E9016EF389E034 /* TripStore.swift */; };
@@ -32,10 +26,16 @@
 		CEC269CA4EF9C270D7C05F60 /* TripMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3CC1F5357080412FD752FC7 /* TripMapView.swift */; };
 		D1CFDB2BE9C14F68877610A2 /* AdministrativeRegionSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CFDB2BE9C14F68877610A1 /* AdministrativeRegionSearch.swift */; };
 		D1CFDB2BE9C14F68877610B2 /* KoreanAdministrativeRegions.txt in Resources */ = {isa = PBXBuildFile; fileRef = D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */; };
+		D81AE0B2F0974C8CA319A000 /* RecommendedCourseImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */; };
 		DC58B20F43AF969E9684AC07 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F245FBF56BEF8C4E184936 /* LocationManager.swift */; };
+		ED4A87DA33484CA0B30F7031 /* RecommendedCourseCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E60616B8D6439CA895AC46 /* RecommendedCourseCatalog.swift */; };
+		EE737982CA8045D082B3DBAF /* RecommendedCourse.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73494BB42B24DE0A248B05D /* RecommendedCourse.swift */; };
 		F067EAC04134CAA2D99222BD /* Trip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A1D890C5846A2F808111A /* Trip.swift */; };
 		F329952E78F760916A6A6F24 /* TripListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21119CCEE8865A9FC7EFF204 /* TripListView.swift */; };
+		F9FD1B9F29364611B06CF323 /* RecommendedCourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */; };
 		FB0783FE6855D9FA144F75CD /* TripFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2862A217D36C27A44B525585 /* TripFlowTests.swift */; };
+		FCB46A9F2C2F4DB8BA415AC1 /* RecommendedCourseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C2A66866854242B0E343EC /* RecommendedCourseListView.swift */; };
+		FF1F30E8F9AE49EEB459806C /* RecommendedCourses.json in Resources */ = {isa = PBXBuildFile; fileRef = F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,21 +49,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseImportView.swift; sourceTree = "<group>"; };
-		F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = RecommendedCourses.json; sourceTree = "<group>"; };
-		8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseDetailView.swift; sourceTree = "<group>"; };
-		41C2A66866854242B0E343EC /* RecommendedCourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseListView.swift; sourceTree = "<group>"; };
-		85E60616B8D6439CA895AC46 /* RecommendedCourseCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseCatalog.swift; sourceTree = "<group>"; };
-		E73494BB42B24DE0A248B05D /* RecommendedCourse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourse.swift; sourceTree = "<group>"; };
-		D4F12F3C48774883BB27A292 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		21119CCEE8865A9FC7EFF204 /* TripListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripListView.swift; sourceTree = "<group>"; };
 		2862A217D36C27A44B525585 /* TripFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripFlowTests.swift; sourceTree = "<group>"; };
 		28AAD1477D5182D66D4B03B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadableSecondaryForeground.swift; sourceTree = "<group>"; };
+		29CA9E2B30A6A8DE004560D2 /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
 		3F8A1D890C5846A2F808111A /* Trip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trip.swift; sourceTree = "<group>"; };
+		41C2A66866854242B0E343EC /* RecommendedCourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseListView.swift; sourceTree = "<group>"; };
 		75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
 		7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSearchView.swift; sourceTree = "<group>"; };
 		7D98DD9467E2437397444A0F /* TripEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripEditorView.swift; sourceTree = "<group>"; };
+		85E60616B8D6439CA895AC46 /* RecommendedCourseCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseCatalog.swift; sourceTree = "<group>"; };
+		8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseDetailView.swift; sourceTree = "<group>"; };
 		8811F6A21967BD6F7D61CA10 /* TripJJIM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = TripJJIM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9680A5301C98501FF919EE51 /* VisitEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitEditorView.swift; sourceTree = "<group>"; };
 		A1EE8FD6F4E9016EF389E034 /* TripStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripStore.swift; sourceTree = "<group>"; };
@@ -73,8 +70,11 @@
 		D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = KoreanAdministrativeRegions.txt; sourceTree = "<group>"; };
 		D3CC1F5357080412FD752FC7 /* TripMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripMapView.swift; sourceTree = "<group>"; };
 		D4F12F3C48774883BB27A292 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseImportView.swift; sourceTree = "<group>"; };
+		E73494BB42B24DE0A248B05D /* RecommendedCourse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourse.swift; sourceTree = "<group>"; };
 		EA25658194DC931115820E18 /* TripJJIMUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = TripJJIMUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripJJIMApp.swift; sourceTree = "<group>"; };
+		F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = RecommendedCourses.json; sourceTree = "<group>"; };
 		FF0F5E04EADE6AB188211DE2 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -167,6 +167,7 @@
 				8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */,
 				D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */,
 				41C2A66866854242B0E343EC /* RecommendedCourseListView.swift */,
+				29CA9E2B30A6A8DE004560D2 /* PreviewData.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -336,6 +337,7 @@
 				913CD84084274142B0D0F421 /* PlaceSearchView.swift in Sources */,
 				8FF572239A30426289D362A2 /* TripEditorView.swift in Sources */,
 				7C176064013B4A4595B326A9 /* HomeView.swift in Sources */,
+				29CA9E2C30A6A8DE004560D2 /* PreviewData.swift in Sources */,
 				F9FD1B9F29364611B06CF323 /* RecommendedCourseDetailView.swift in Sources */,
 				D81AE0B2F0974C8CA319A000 /* RecommendedCourseImportView.swift in Sources */,
 				FCB46A9F2C2F4DB8BA415AC1 /* RecommendedCourseListView.swift in Sources */,

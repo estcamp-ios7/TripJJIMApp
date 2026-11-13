@@ -105,6 +105,13 @@ struct RecommendedCourseListView: View {
     }
 }
 
+#Preview("추천 코스 목록") {
+    NavigationStack {
+        RecommendedCourseListView { _ in }
+    }
+    .environment(PreviewData.makeStore())
+}
+
 struct RecommendedCourseHeading: View {
     let course: RecommendedCourse
 
