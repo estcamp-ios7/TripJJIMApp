@@ -95,12 +95,12 @@ struct TripEditorView: View {
     }
 }
 
-private struct RegionSelection {
+struct RegionSelection {
     let name: String
     let location: TripRegionLocation?
 }
 
-private struct TripRegionSearchView: View {
+struct TripRegionSearchView: View {
     @Environment(\.dismiss) private var dismiss
     let onSelect: (RegionSelection) -> Void
     @State private var query = ""
