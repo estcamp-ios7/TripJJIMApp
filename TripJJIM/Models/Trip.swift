@@ -43,7 +43,7 @@ struct Visit: Codable, Identifiable, Equatable {
     var id = UUID()
     var placeName: String
     var visitDate: Date
-    var coordinate: PlaceCoordinate
+    var coordinate: PlaceCoordinate?
     var address: String? = nil
     var memo: String? = nil
     var reminderEnabled = false
@@ -51,6 +51,18 @@ struct Visit: Codable, Identifiable, Equatable {
 
     // Optional so JSON saved before presets were introduced still decodes.
     var reminderPreset: ReminderPreset?
+
+    // Imported day-only visits retain their itinerary order until a time is set.
+    var untimedOrder: Int?
+
+    var visitTimeLabel: String { untimedOrder == nil ? visitDate.timeLabel : "시간 미정" }
+
+    func isRemaining(after date: Date) -> Bool {
+        if untimedOrder != nil {
+            return Calendar.current.compare(visitDate, to: date, toGranularity: .day) != .orderedAscending
+        }
+        return visitDate > date
+    }
 
     var selectedReminderPreset: ReminderPreset {
         get { reminderPreset ?? (customReminderDate == nil ? .atVisit : .custom) }
@@ -122,11 +134,14 @@ struct Trip: Codable, Identifiable {
     }
 
     func nextVisit(after date: Date) -> Visit? {
-        visits.filter { $0.visitDate > date }.min(by: Self.isEarlier)
+        visits.filter { $0.untimedOrder == nil && $0.visitDate > date }.min(by: Self.isEarlier)
     }
 
     private static func isEarlier(_ first: Visit, _ second: Visit) -> Bool {
         if first.visitDate == second.visitDate {
+            if first.untimedOrder != second.untimedOrder {
+                return (first.untimedOrder ?? Int.max) < (second.untimedOrder ?? Int.max)
+            }
             return first.id.uuidString < second.id.uuidString
         }
         return first.visitDate < second.visitDate

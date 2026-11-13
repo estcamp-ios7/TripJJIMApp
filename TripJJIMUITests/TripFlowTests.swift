@@ -79,6 +79,47 @@ final class TripFlowTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["나의 여행"].waitForExistence(timeout: 5))
     }
 
+    func testImportRecommendedCourseCancelSaveAndRestore() {
+        let app = XCUIApplication()
+        let suffix = " \(UUID().uuidString.prefix(6))"
+        let title = "제주 성산의 해안 풍경" + suffix
+        app.launch()
+        app.buttons["home-recommendations"].tap()
+        let course = app.buttons["recommended-course-jeju-seongsan"]
+        XCTAssertTrue(course.waitForExistence(timeout: 10))
+        course.tap()
+        let start = app.buttons["start-course-import"]
+        for _ in 0..<5 where !start.isHittable { app.swipeUp() }
+        start.tap()
+        let field = app.textFields["course-import-title"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        attachScreen("Course import preview", in: app)
+        app.buttons["취소"].tap()
+        XCTAssertTrue(app.navigationBars["코스 상세"].waitForExistence(timeout: 5))
+        start.tap()
+        field.tap()
+        field.typeText(suffix)
+        app.buttons["save-imported-course"].tap()
+        XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["visit-row-성산일출봉"].exists)
+        XCTAssertTrue(app.buttons["visit-row-광치기해변"].exists)
+        attachScreen("Imported trip", in: app)
+
+        app.terminate()
+        app.launch()
+        openTrip(title, in: app)
+        XCTAssertTrue(app.buttons["visit-row-광치기해변"].waitForExistence(timeout: 5))
+        app.buttons["visit-row-광치기해변"].tap()
+        XCTAssertTrue(app.staticTexts["지도에 표시할 위치 정보가 없어요."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "시간 미정")).firstMatch.exists)
+        app.buttons["수정"].tap()
+        XCTAssertTrue(app.buttons["장소 검색"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["방문 시각 지정"].exists)
+        app.buttons["취소"].tap()
+        showTripList(in: app)
+        deleteTrip(title, in: app)
+    }
+
     func testBulkDeleteTrips() {
         let app = XCUIApplication()
         let suffix = UUID().uuidString.prefix(6)
@@ -677,6 +718,37 @@ final class RecommendedCourseCatalogTests: XCTestCase {
         XCTAssertEqual(jeju.days.first?.places.map(\.order), [1, 2])
         XCTAssertNil(jeju.days.last?.places.first?.coordinate)
         XCTAssertTrue(jeju.days.first?.places.first?.coordinateSource != nil)
+    }
+
+    func testImportUsesCalendarDaysAndPreservesPlaces() throws {
+        let course = try XCTUnwrap(RecommendedCourseCatalog.load(from: Bundle(for: Self.self)).first {
+            $0.id == "jeju-seongsan"
+        })
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Seoul"))
+        for month in [1, 12] {
+            let start = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: month, day: 31, hour: 18)))
+            let end = try course.visitDay(2, starting: start, calendar: calendar)
+            let expected = DateComponents(year: month == 12 ? 2027 : 2026, month: month == 12 ? 1 : 2, day: 1)
+            XCTAssertEqual(calendar.dateComponents([.year, .month, .day], from: end), expected)
+
+            let visits = try course.makeVisits(starting: start, calendar: calendar)
+            let repeated = try course.makeVisits(starting: start, calendar: calendar)
+            XCTAssertEqual(Set(visits.map(\.id)).intersection(repeated.map(\.id)).count, 0)
+            let places = course.days.flatMap(\.places)
+            XCTAssertEqual(visits.map(\.placeName), places.map(\.name))
+            XCTAssertEqual(visits.map(\.address), places.map { Optional($0.area) })
+            XCTAssertEqual(visits.map(\.coordinate), places.map(\.coordinate))
+            XCTAssertEqual(visits.map(\.untimedOrder), [1, 2, 1])
+            XCTAssertEqual(visits.map(\.visitDate), [calendar.startOfDay(for: start), calendar.startOfDay(for: start), end])
+            XCTAssertTrue(visits.allSatisfy { !$0.reminderEnabled && $0.visitTimeLabel == "시간 미정" })
+
+            let trip = Trip(name: course.title, visits: visits, startDate: start, endDate: end, region: course.region)
+            let decoded = try JSONDecoder().decode(Trip.self, from: JSONEncoder().encode(trip))
+            XCTAssertEqual(decoded.id, trip.id)
+            XCTAssertEqual(decoded.visits, visits)
+            XCTAssertNotEqual(Trip(name: course.title, visits: repeated).id, trip.id)
+        }
     }
 
     func testRejectsDuplicateCoursesAndMalformedJSON() throws {

@@ -42,7 +42,7 @@ struct VisitDetailView: View {
                 map(for: visit)
             }
             Section("방문 일시와 알림") {
-                Label("\(visit.visitDate.dayLabel) · \(visit.visitDate.timeLabel)", systemImage: "calendar")
+                Label("\(visit.visitDate.dayLabel) · \(visit.visitTimeLabel)", systemImage: "calendar")
                     .readableSecondaryForeground()
                 Label(reminderLabel(for: visit), systemImage: visit.reminderEnabled ? "bell" : "bell.slash")
                     .accessibilityIdentifier("visit-detail-reminder")
@@ -77,8 +77,9 @@ struct VisitDetailView: View {
 
     @ViewBuilder
     private func map(for visit: Visit) -> some View {
-        let coordinate = CLLocationCoordinate2D(latitude: visit.coordinate.latitude, longitude: visit.coordinate.longitude)
-        if CLLocationCoordinate2DIsValid(coordinate) {
+        if let point = visit.coordinate,
+           case let coordinate = CLLocationCoordinate2D(latitude: point.latitude, longitude: point.longitude),
+           CLLocationCoordinate2DIsValid(coordinate) {
             let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1_200, longitudinalMeters: 1_200)
             Map(position: .constant(.region(region)), interactionModes: []) {
                 Marker(visit.placeName, coordinate: coordinate).tint(Color.tripAccent)

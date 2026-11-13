@@ -3,6 +3,10 @@ import SwiftUI
 
 struct RecommendedCourseDetailView: View {
     let course: RecommendedCourse
+    let onImported: (Trip.ID) -> Void
+
+    @State private var isImporting = false
+    @State private var savedTripID: Trip.ID?
 
     var body: some View {
         ScrollView {
@@ -50,6 +54,10 @@ struct RecommendedCourseDetailView: View {
                         RecommendedCourseMap(pins: pins)
                     }
                 }
+                Button("이 코스로 여행 만들기") { isImporting = true }
+                    .buttonStyle(.borderedProminent)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("start-course-import")
             }
             .padding(20)
             .frame(maxWidth: 560)
@@ -58,6 +66,16 @@ struct RecommendedCourseDetailView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("코스 상세")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isImporting, onDismiss: {
+            guard let savedTripID else { return }
+            self.savedTripID = nil
+            onImported(savedTripID)
+        }) {
+            RecommendedCourseImportView(course: course) { tripID in
+                savedTripID = tripID
+                isImporting = false
+            }
+        }
     }
 
     private func placeRow(_ place: RecommendedPlace) -> some View {

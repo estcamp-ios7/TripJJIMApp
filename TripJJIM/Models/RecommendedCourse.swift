@@ -59,3 +59,28 @@ struct RecommendedPlace: Codable, Identifiable {
     let source: URL
     let coordinateSource: URL?
 }
+
+extension RecommendedCourse {
+    enum ImportError: LocalizedError {
+        case invalidSchedule
+
+        var errorDescription: String? { "코스의 여행 날짜를 계산할 수 없어요." }
+    }
+
+    func visitDay(_ number: Int, starting startDate: Date, calendar: Calendar) throws -> Date {
+        guard number > 0, number <= dayCount,
+              let date = calendar.date(byAdding: .day, value: number - 1, to: calendar.startOfDay(for: startDate))
+        else { throw ImportError.invalidSchedule }
+        return calendar.startOfDay(for: date)
+    }
+
+    func makeVisits(starting startDate: Date, calendar: Calendar) throws -> [Visit] {
+        try days.sorted { $0.number < $1.number }.flatMap { day in
+            let date = try visitDay(day.number, starting: startDate, calendar: calendar)
+            return day.places.sorted { $0.order < $1.order }.map { place in
+                Visit(placeName: place.name, visitDate: date, coordinate: place.coordinate,
+                      address: place.area, untimedOrder: place.order)
+            }
+        }
+    }
+}

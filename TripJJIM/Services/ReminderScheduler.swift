@@ -22,7 +22,7 @@ struct ReminderScheduler {
         let pending = await center.pendingNotificationRequests()
             .filter { $0.identifier.hasPrefix(prefix) }
         let requested = settings.authorizationStatus.allowsReminders
-            ? visits.filter { $0.reminderEnabled && $0.reminderDate > now }
+            ? visits.filter { $0.reminderEnabled && $0.untimedOrder == nil && $0.reminderDate > now }
             : []
         let activeIDs = Set(requested.map { identifier(for: $0) })
 

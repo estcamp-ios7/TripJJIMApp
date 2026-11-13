@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct RecommendedCourseListView: View {
+    let onImported: (Trip.ID) -> Void
+
     @Environment(\.dismiss) private var dismiss
     @State private var theme: TravelTheme?
     @State private var catalog: Result<[RecommendedCourse], Error>?
@@ -78,7 +80,7 @@ struct RecommendedCourseListView: View {
             LazyVStack(spacing: 16) {
                 ForEach(courses) { course in
                     NavigationLink {
-                        RecommendedCourseDetailView(course: course)
+                        RecommendedCourseDetailView(course: course, onImported: onImported)
                     } label: {
                         VStack(alignment: .leading, spacing: 0) {
                             RecommendedCourseArtwork(course: course)
