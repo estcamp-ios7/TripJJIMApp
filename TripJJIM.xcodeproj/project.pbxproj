@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7C176064013B4A4595B326A9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F12F3C48774883BB27A292 /* HomeView.swift */; };
 		0D2178503F724437A893267B /* TripJJIMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */; };
 		29BC588330A4AD6300956A0B /* ReadableSecondaryForeground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */; };
+		7C176064013B4A4595B326A9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F12F3C48774883BB27A292 /* HomeView.swift */; };
 		83FAFBFB4BB08D8866CBACBE /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */; };
 		8FF572239A30426289D362A2 /* TripEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D98DD9467E2437397444A0F /* TripEditorView.swift */; };
 		913CD84084274142B0D0F421 /* PlaceSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */; };
@@ -39,11 +39,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		D4F12F3C48774883BB27A292 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		21119CCEE8865A9FC7EFF204 /* TripListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripListView.swift; sourceTree = "<group>"; };
 		2862A217D36C27A44B525585 /* TripFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripFlowTests.swift; sourceTree = "<group>"; };
 		28AAD1477D5182D66D4B03B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */ = {isa = PBXFileReference; path = ReadableSecondaryForeground.swift; sourceTree = "<group>"; };
+		29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadableSecondaryForeground.swift; sourceTree = "<group>"; };
 		3F8A1D890C5846A2F808111A /* Trip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trip.swift; sourceTree = "<group>"; };
 		75F5B7281BBD218DC7FBAFEB /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
 		7622EDB6A0504F5ABAA97F30 /* PlaceSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSearchView.swift; sourceTree = "<group>"; };
@@ -56,6 +55,7 @@
 		D1CFDB2BE9C14F68877610A1 /* AdministrativeRegionSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdministrativeRegionSearch.swift; sourceTree = "<group>"; };
 		D1CFDB2BE9C14F68877610B1 /* KoreanAdministrativeRegions.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = KoreanAdministrativeRegions.txt; sourceTree = "<group>"; };
 		D3CC1F5357080412FD752FC7 /* TripMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripMapView.swift; sourceTree = "<group>"; };
+		D4F12F3C48774883BB27A292 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		EA25658194DC931115820E18 /* TripJJIMUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = TripJJIMUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0502B0B1715543C1181DC4E /* TripJJIMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripJJIMApp.swift; sourceTree = "<group>"; };
 		FF0F5E04EADE6AB188211DE2 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
@@ -349,10 +349,15 @@
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "지도에서 내 위치를 찾기 위해 위치 정보가 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tripjjim.TripJJIM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -382,10 +387,15 @@
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "지도에서 내 위치를 찾기 위해 위치 정보가 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tripjjim.TripJJIM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
