@@ -658,10 +658,3 @@ private extension PlaceCoordinate {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 }
-
-#Preview("여행 지도") {
-    NavigationStack {
-        TripMapTripView(tripID: PreviewData.trip.id, initialDay: PreviewData.startDate)
-    }
-    .environment(PreviewData.makeStore())
-}

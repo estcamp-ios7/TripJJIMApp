@@ -103,12 +103,6 @@ struct RecommendedCourseListView: View {
     }
 }
 
-#Preview("추천 코스 목록") {
-    NavigationStack {
-        RecommendedCourseListView()
-    }
-}
-
 struct RecommendedCourseHeading: View {
     let course: RecommendedCourse
 

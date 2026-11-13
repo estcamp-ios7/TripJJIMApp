@@ -148,8 +148,3 @@ struct HomeView: View {
         onTripCreated()
     }
 }
-
-#Preview("홈") {
-    HomeView {}
-        .environment(PreviewData.makeStore())
-}

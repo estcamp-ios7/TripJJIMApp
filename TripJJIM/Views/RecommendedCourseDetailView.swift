@@ -89,12 +89,6 @@ struct RecommendedCourseDetailView: View {
     }
 }
 
-#Preview("추천 코스 상세") {
-    NavigationStack {
-        RecommendedCourseDetailView(course: PreviewData.course)
-    }
-}
-
 private struct CoursePin: Identifiable {
     let day: Int
     let place: RecommendedPlace

@@ -209,24 +209,3 @@ struct VisitEditorView: View {
         }
     }
 }
-
-#Preview("방문 일정 추가") {
-    VisitEditorView(
-        visit: PreviewData.marketVisit,
-        isNew: true,
-        region: PreviewData.trip.region,
-        tripRegionLocation: PreviewData.trip.regionLocation
-    ) { _ in true }
-    .environment(PreviewData.makeStore())
-}
-
-#Preview("방문 일정 수정") {
-    VisitEditorView(
-        visit: PreviewData.marketVisit,
-        isNew: false,
-        region: PreviewData.trip.region,
-        tripRegionLocation: PreviewData.trip.regionLocation,
-        onDelete: { true }
-    ) { _ in true }
-    .environment(PreviewData.makeStore())
-}

@@ -285,13 +285,6 @@ struct TripDetailView: View {
     }
 }
 
-#Preview("여행 상세") {
-    NavigationStack {
-        TripDetailView(tripID: PreviewData.trip.id)
-    }
-    .environment(PreviewData.makeStore())
-}
-
 private struct NextDestinationCard: View {
     let visit: Visit
     let dayNumber: Int
