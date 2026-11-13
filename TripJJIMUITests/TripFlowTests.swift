@@ -6,6 +6,53 @@ final class TripFlowTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    func testTravelPreferenceOnboarding() {
+        let app = XCUIApplication()
+        app.launch()
+        let homeCard = app.buttons["home-preferences"]
+        XCTAssertTrue(homeCard.waitForExistence(timeout: 10))
+        homeCard.tap()
+
+        let next = app.buttons["다음"]
+        XCTAssertTrue(next.waitForExistence(timeout: 5))
+        XCTAssertFalse(next.isEnabled)
+        XCTAssertFalse(app.buttons["이전"].exists)
+        attachScreen("Preference region", in: app)
+        app.buttons["아직 정하지 않았어요"].tap()
+        next.tap()
+
+        XCTAssertFalse(next.isEnabled)
+        app.buttons["1박 2일"].tap()
+        app.buttons["이전"].tap()
+        XCTAssertTrue(next.isEnabled)
+        next.tap()
+        XCTAssertTrue(next.isEnabled)
+        next.tap()
+
+        XCTAssertFalse(next.isEnabled)
+        app.buttons["자연·힐링"].tap()
+        next.tap()
+        XCTAssertFalse(next.isEnabled)
+        app.buttons["아직 모르겠어요"].tap()
+        next.tap()
+
+        XCTAssertTrue(app.staticTexts["선택한 여행 취향"].exists)
+        XCTAssertTrue(app.buttons["preference-edit-1"].label.contains("아직 정하지 않았어요"))
+        XCTAssertTrue(app.buttons["preference-edit-4"].label.contains("아직 모르겠어요"))
+        app.buttons["preference-edit-2"].tap()
+        app.buttons["2박 3일"].tap()
+        app.buttons["답변 수정 완료"].tap()
+        XCTAssertTrue(app.buttons["preference-edit-2"].label.contains("2박 3일"))
+        attachScreen("Preference summary", in: app)
+        app.buttons["취향 확인 완료"].tap()
+        XCTAssertTrue(homeCard.waitForExistence(timeout: 5))
+
+        homeCard.tap()
+        XCTAssertFalse(next.isEnabled)
+        app.buttons["preference-close"].tap()
+        XCTAssertTrue(homeCard.waitForExistence(timeout: 5))
+    }
+
     func testHomePlanningRoutesAndTripCreation() {
         let app = XCUIApplication()
         let trip = "Home trip \(UUID().uuidString.prefix(6))"
@@ -16,8 +63,8 @@ final class TripFlowTests: XCTestCase {
         attachScreen("Home upper cards", in: app)
 
         app.buttons["home-preferences"].tap()
-        XCTAssertTrue(app.staticTexts["취향에 맞는 여행 계획 기능을 준비 중이에요."].waitForExistence(timeout: 5))
-        app.buttons["닫기"].tap()
+        XCTAssertTrue(app.staticTexts["어디로 여행을 떠나고 싶나요?"].waitForExistence(timeout: 5))
+        app.buttons["preference-close"].tap()
 
         app.swipeUp()
         let create = app.buttons["home-create-trip"]
@@ -764,5 +811,28 @@ final class RecommendedCourseCatalogTests: XCTestCase {
         let duplicates = try JSONEncoder().encode([course, course])
         XCTAssertThrowsError(try RecommendedCourseCatalog.decode(duplicates))
         XCTAssertThrowsError(try RecommendedCourseCatalog.decode(Data("{".utf8)))
+    }
+}
+
+final class TravelPreferenceTests: XCTestCase {
+    func testRangesAndUnspecifiedAnswers() {
+        var preference = TravelPreference()
+        XCTAssertNil(preference.region)
+        XCTAssertNil(preference.dailyVisits)
+
+        preference.region = .undecided
+        preference.dailyVisits = .unspecified
+        XCTAssertEqual(preference.region, .undecided)
+        XCTAssertEqual(preference.dailyVisits, .unspecified)
+        XCTAssertNil(preference.dailyVisits?.bounds)
+
+        XCTAssertTrue(TravelPreference.Duration.dayTrip.includes(days: 1))
+        XCTAssertFalse(TravelPreference.Duration.twoNights.includes(days: 4))
+        XCTAssertFalse(TravelPreference.Duration.threeNightsOrMore.includes(days: 3))
+        XCTAssertTrue(TravelPreference.Duration.threeNightsOrMore.includes(days: 7))
+        XCTAssertEqual(TravelPreference.DailyVisits.oneToTwo.bounds?.maximum, 2)
+        XCTAssertEqual(TravelPreference.DailyVisits.threeToFour.bounds?.minimum, 3)
+        XCTAssertEqual(TravelPreference.DailyVisits.fiveOrMore.bounds?.minimum, 5)
+        XCTAssertNil(TravelPreference.DailyVisits.fiveOrMore.bounds?.maximum)
     }
 }

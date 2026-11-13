@@ -35,7 +35,7 @@ struct HomeView: View {
                 )
                 featureCard(
                     "내 취향으로 계획하기",
-                    description: "간단한 질문으로 나에게 맞는 여행 일정을 만들어 보세요.",
+                    description: "간단한 질문에 답하고 나만의 여행 취향을 확인해 보세요.",
                     imageName: "HomePersonalizedTravel",
                     destination: .preferences
                 )
@@ -73,7 +73,7 @@ struct HomeView: View {
                     }
                 }
             case .preferences:
-                preparationSheet("취향에 맞는 여행 계획 기능을 준비 중이에요.", symbol: "mountain.2")
+                TravelPreferenceOnboardingView { _ in }
             case .createTrip:
                 TripEditorView(trip: nil) { _ in
                     didCreateTrip = true
@@ -132,18 +132,6 @@ struct HomeView: View {
         }
         .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
-    }
-
-    private func preparationSheet(_ title: String, symbol: String) -> some View {
-        NavigationStack {
-            ContentUnavailableView(title, systemImage: symbol)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("닫기") { destination = nil }
-                    }
-                }
-        }
-        .presentationDetents([.medium])
     }
 
     private func finishTripCreation() {
