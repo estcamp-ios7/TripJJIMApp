@@ -44,7 +44,7 @@ final class TripStore {
         }
     }
 
-    func saveTrip(name: String, startDate: Date, endDate: Date, region: String, id: Trip.ID?, regionLocation: TripRegionLocation? = nil) throws -> Trip.ID {
+    func saveTrip(name: String, startDate: Date, endDate: Date, region: String, id: Trip.ID?, regionLocation: TripRegionLocation? = nil, initialVisits: [Visit] = []) throws -> Trip.ID {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let region = region.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { throw TripEditError.missingName }
@@ -64,7 +64,7 @@ final class TripStore {
             index = existing
         } else {
             index = updated.endIndex
-            updated.append(Trip(name: name))
+            updated.append(Trip(name: name, visits: initialVisits))
         }
 
         let periodChanged = updated[index].startDate != first || updated[index].endDate != last

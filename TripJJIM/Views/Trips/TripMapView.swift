@@ -205,7 +205,7 @@ struct TripMapView: View {
     }
 
     private var cameraContext: CameraContext {
-        CameraContext(day: selectedDay, region: trip.region, regionLocation: trip.regionLocation, coordinates: visits.map(\.coordinate))
+        CameraContext(day: selectedDay, region: trip.region, regionLocation: trip.regionLocation, coordinates: visits.compactMap(\.coordinate))
     }
 
     private var selectionBinding: Binding<MapSelection<Visit.ID>?> {
@@ -257,18 +257,20 @@ struct TripMapView: View {
             MapReader { proxy in
                 Map(position: $position, interactionModes: [.pan, .zoom], selection: selectionBinding) {
                     ForEach(Array(visits.enumerated()), id: \.element.id) { index, visit in
-                        Annotation(visit.placeName, coordinate: visit.coordinate.mapCoordinate, anchor: .bottom) {
-                            Button {
-                                select(visit)
-                            } label: {
-                                NumberedPin(number: index + 1, isSelected: selectedVisitID == visit.id)
+                        if let coordinate = visit.coordinate {
+                            Annotation(visit.placeName, coordinate: coordinate.mapCoordinate, anchor: .bottom) {
+                                Button {
+                                    select(visit)
+                                } label: {
+                                    NumberedPin(number: index + 1, isSelected: selectedVisitID == visit.id)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(index + 1)번 \(visit.placeName)")
+                                .accessibilityIdentifier("map-pin-\(visit.placeName)")
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("\(index + 1)번 \(visit.placeName)")
-                            .accessibilityIdentifier("map-pin-\(visit.placeName)")
+                            .tag(MapSelection(visit.id))
+                            .annotationTitles(.hidden)
                         }
-                        .tag(MapSelection(visit.id))
-                        .annotationTitles(.hidden)
                     }
                     if let current = location.currentCoordinate {
                         Annotation("내 위치", coordinate: current.mapCoordinate) {
@@ -394,7 +396,7 @@ struct TripMapView: View {
                         if let address = visit.address {
                             Text(address).font(.footnote).readableSecondaryForeground()
                         }
-                        Text(visit.visitDate.timeLabel)
+                        Text(visit.visitTimeLabel)
                             .font(.subheadline)
                             .readableSecondaryForeground()
                     }
@@ -421,7 +423,8 @@ struct TripMapView: View {
     private func mapTapped(at point: CGPoint, using proxy: MapProxy) {
         // 핀 위를 누른 경우에는 기존 일정을 선택합니다.
         if let visit = visits.first(where: { visit in
-            guard let pin = proxy.convert(visit.coordinate.mapCoordinate, to: .local) else { return false }
+            guard let coordinate = visit.coordinate,
+                  let pin = proxy.convert(coordinate.mapCoordinate, to: .local) else { return false }
             return abs(point.x - pin.x) <= 22 && (pin.y - 44...pin.y + 8).contains(point.y)
         }) {
             select(visit)
@@ -533,17 +536,18 @@ struct TripMapView: View {
 
     private func focusOnSavedPlaces() {
         cancelRegionFocus()
-        guard let first = visits.first else {
+        let coordinates = visits.compactMap(\.coordinate)
+        guard let first = coordinates.first else {
             focusOnTripRegion()
             return
         }
-        if visits.count == 1 {
-            moveMap(to: first.coordinate)
+        if coordinates.count == 1 {
+            moveMap(to: first)
             return
         }
 
-        let bounds = visits.reduce(MKMapRect.null) { bounds, visit in
-            let point = MKMapPoint(visit.coordinate.mapCoordinate)
+        let bounds = coordinates.reduce(MKMapRect.null) { bounds, coordinate in
+            let point = MKMapPoint(coordinate.mapCoordinate)
             return bounds.union(MKMapRect(origin: point, size: MKMapSize(width: 1, height: 1)))
         }
         let padding = max(bounds.width, bounds.height) * 0.2 + 4_000

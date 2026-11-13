@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D81AE0B2F0974C8CA319A000 /* RecommendedCourseImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */; };
 		FF1F30E8F9AE49EEB459806C /* RecommendedCourses.json in Resources */ = {isa = PBXBuildFile; fileRef = F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */; };
 		165B670BC19A4EF7B51AD8C2 /* RecommendedCourses.json in Resources */ = {isa = PBXBuildFile; fileRef = F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */; };
 		F9FD1B9F29364611B06CF323 /* RecommendedCourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */; };
@@ -48,6 +49,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseImportView.swift; sourceTree = "<group>"; };
 		F10EB7E1A66E49BAA02534A8 /* RecommendedCourses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = RecommendedCourses.json; sourceTree = "<group>"; };
 		8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseDetailView.swift; sourceTree = "<group>"; };
 		41C2A66866854242B0E343EC /* RecommendedCourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendedCourseListView.swift; sourceTree = "<group>"; };
@@ -163,6 +165,7 @@
 				29BC588230A4AD6300956A0B /* ReadableSecondaryForeground.swift */,
 				D4F12F3C48774883BB27A292 /* HomeView.swift */,
 				8693D46AEDA545EDB05948F3 /* RecommendedCourseDetailView.swift */,
+				D81AE0B2F0974C8CA319A001 /* RecommendedCourseImportView.swift */,
 				41C2A66866854242B0E343EC /* RecommendedCourseListView.swift */,
 			);
 			path = Views;
@@ -334,6 +337,7 @@
 				8FF572239A30426289D362A2 /* TripEditorView.swift in Sources */,
 				7C176064013B4A4595B326A9 /* HomeView.swift in Sources */,
 				F9FD1B9F29364611B06CF323 /* RecommendedCourseDetailView.swift in Sources */,
+				D81AE0B2F0974C8CA319A000 /* RecommendedCourseImportView.swift in Sources */,
 				FCB46A9F2C2F4DB8BA415AC1 /* RecommendedCourseListView.swift in Sources */,
 				865C3988E39A409AB92F06E6 /* RecommendedCourseCatalog.swift in Sources */,
 				EE737982CA8045D082B3DBAF /* RecommendedCourse.swift in Sources */,

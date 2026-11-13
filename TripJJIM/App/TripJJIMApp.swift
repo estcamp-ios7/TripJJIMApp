@@ -13,8 +13,8 @@ private struct RootTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab("홈", systemImage: "house", value: TabSelection.home) {
-                HomeView {
-                    tripPath.removeAll()
+                HomeView { tripID in
+                    tripPath = tripID.map { [$0] } ?? []
                     selectedTab = .trips
                 }
             }

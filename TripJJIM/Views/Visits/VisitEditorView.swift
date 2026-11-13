@@ -51,11 +51,23 @@ struct VisitEditorView: View {
                     Button {
                         searchingPlace = true
                     } label: {
-                        Label(isNew ? "장소 검색" : "장소 변경", systemImage: "magnifyingglass")
+                        Label(isNew || visit.coordinate == nil ? "장소 검색" : "장소 변경", systemImage: "magnifyingglass")
                     }
                     DatePicker("방문 날짜", selection: $visit.visitDate, displayedComponents: .date)
                         .accessibilityIdentifier("visit-date")
-                    DatePicker("방문 시각", selection: $visit.visitDate, displayedComponents: .hourAndMinute)
+                    if visit.untimedOrder != nil {
+                        LabeledContent("방문 시각", value: "시간 미정")
+                        Button("방문 시각 지정") {
+                            let calendar = Calendar.current
+                            if let time = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: visit.visitDate),
+                               calendar.isDate(time, inSameDayAs: visit.visitDate) {
+                                visit.visitDate = time
+                                visit.untimedOrder = nil
+                            }
+                        }
+                    } else {
+                        DatePicker("방문 시각", selection: $visit.visitDate, displayedComponents: .hourAndMinute)
+                    }
                 }
                 Section("방문 메모") {
                     TextField("메모를 입력해 주세요", text: $memo, axis: .vertical)
@@ -128,7 +140,7 @@ struct VisitEditorView: View {
                 set: setReminderEnabled
             ))
             .accessibilityIdentifier("visit-reminder")
-            .disabled(isRequestingPermission)
+            .disabled(isRequestingPermission || visit.untimedOrder != nil)
 
             if visit.reminderEnabled {
                 Picker("알림 시점", selection: $visit.selectedReminderPreset) {
@@ -154,7 +166,7 @@ struct VisitEditorView: View {
         } header: {
             Text("알림")
         } footer: {
-            Text("선택한 일시에 한 번 알림을 보내드려요.")
+            Text(visit.untimedOrder == nil ? "선택한 일시에 한 번 알림을 보내드려요." : "방문 시각을 지정하면 알림을 설정할 수 있어요.")
         }
     }
 
@@ -189,7 +201,9 @@ struct VisitEditorView: View {
     private func save() {
         let calendar = Calendar.current
         visit.placeName = cleanName
-        if isNew || visit.visitDate != original.visitDate {
+        if visit.untimedOrder != nil {
+            visit.visitDate = calendar.startOfDay(for: visit.visitDate)
+        } else if isNew || visit.visitDate != original.visitDate {
             visit.visitDate = calendar.dateInterval(of: .minute, for: visit.visitDate)?.start ?? visit.visitDate
         }
         if let date = visit.customReminderDate, isNew || date != original.customReminderDate {

@@ -255,7 +255,7 @@ struct TripDetailView: View {
                                         .background(Color.tripAccent.opacity(0.12), in: Circle())
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(visit.placeName).font(.headline)
-                                        Text(visit.visitDate.timeLabel)
+                                        Text(visit.visitTimeLabel)
                                             .font(.subheadline)
                                             .readableSecondaryForeground()
                                     }

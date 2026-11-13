@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct HomeView: View {
-    let onTripCreated: () -> Void
+    let onTripCreated: (Trip.ID?) -> Void
 
     @State private var destination: Destination?
     @State private var didCreateTrip = false
+    @State private var importedTripID: Trip.ID?
 
     private enum Destination: String, Identifiable {
         case recommendations, preferences, createTrip
@@ -66,7 +67,10 @@ struct HomeView: View {
             switch destination {
             case .recommendations:
                 NavigationStack {
-                    RecommendedCourseListView()
+                    RecommendedCourseListView { tripID in
+                        importedTripID = tripID
+                        self.destination = nil
+                    }
                 }
             case .preferences:
                 preparationSheet("취향에 맞는 여행 계획 기능을 준비 중이에요.", symbol: "mountain.2")
@@ -143,8 +147,10 @@ struct HomeView: View {
     }
 
     private func finishTripCreation() {
-        guard didCreateTrip else { return }
+        guard didCreateTrip || importedTripID != nil else { return }
         didCreateTrip = false
-        onTripCreated()
+        let tripID = importedTripID
+        importedTripID = nil
+        onTripCreated(tripID)
     }
 }

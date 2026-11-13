@@ -209,7 +209,7 @@ private struct TripListRowContent: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 TimelineView(.periodic(from: .now, by: 60)) { context in
-                    Text("남은 방문 일정 \(trip.visits.lazy.filter { $0.visitDate > context.date }.count)개")
+                    Text("남은 방문 일정 \(trip.visits.lazy.filter { $0.isRemaining(after: context.date) }.count)개")
                         .font(.subheadline)
                         .readableSecondaryForeground()
                 }
