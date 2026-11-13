@@ -1,12 +1,18 @@
 import SwiftUI
 
 struct TravelPreferenceOnboardingView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var preference = TravelPreference()
+    @Binding var preference: TravelPreference
     @State private var step: Step? = .region
     @State private var editingFromSummary = false
 
     let onComplete: (TravelPreference) -> Void
+
+    init(preference: Binding<TravelPreference>, startsAtSummary: Bool = false,
+         onComplete: @escaping (TravelPreference) -> Void) {
+        _preference = preference
+        _step = State(initialValue: startsAtSummary ? nil : .region)
+        self.onComplete = onComplete
+    }
 
     private enum Step: Int, CaseIterable {
         case region = 1, duration, theme, dailyVisits
@@ -40,7 +46,7 @@ struct TravelPreferenceOnboardingView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        Group {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     if let step {
@@ -63,13 +69,7 @@ struct TravelPreferenceOnboardingView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) { controls }
             .navigationTitle("여행 취향")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기", systemImage: "xmark") { dismiss() }
-                        .labelStyle(.iconOnly)
-                        .accessibilityIdentifier("preference-close")
-                }
-            }
+
         }
         .tint(.tripAccent)
     }
@@ -193,9 +193,8 @@ struct TravelPreferenceOnboardingView: View {
                 }
                 .disabled(answer(for: step) == nil)
             } else {
-                primaryButton("취향 확인 완료") {
+                primaryButton("추천 코스 보기") {
                     onComplete(preference)
-                    dismiss()
                 }
             }
         }
@@ -222,6 +221,121 @@ struct TravelPreferenceOnboardingView: View {
         case .duration: preference.duration?.title
         case .theme: preference.theme?.title
         case .dailyVisits: preference.dailyVisits?.title
+        }
+    }
+}
+
+/// Owns the entire in-memory preference session. Dismissing the sheet discards it.
+struct PersonalizedRecommendationFlow: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var preference = TravelPreference()
+    @State private var showingResults = false
+    @State private var editing = false
+    @State private var browsing = false
+    @State private var catalog: Result<[RecommendedCourse], Error>?
+    @State private var matches: [PersonalizedRecommendation.Match] = []
+    @State private var inputError: PersonalizedRecommendation.InputError?
+    let onImported: (Trip.ID) -> Void
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if showingResults { results }
+                else {
+                    TravelPreferenceOnboardingView(preference: $preference, startsAtSummary: editing) { _ in
+                        apply()
+                    }
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("닫기", systemImage: "xmark") { dismiss() }
+                        .labelStyle(.iconOnly)
+                        .accessibilityIdentifier("preference-close")
+                }
+            }
+        }
+        .sheet(isPresented: $browsing) {
+            NavigationStack { RecommendedCourseListView(onImported: onImported) }
+        }
+        .tint(.tripAccent)
+    }
+
+    private func apply() {
+        if catalog == nil { catalog = Result { try RecommendedCourseCatalog.load() } }
+        matches = []
+        inputError = nil
+        if case .success(let courses) = catalog {
+            do { matches = try PersonalizedRecommendation.evaluate(preference, courses: courses) }
+            catch let error as PersonalizedRecommendation.InputError { inputError = error }
+            catch { inputError = .missingAnswers }
+        }
+        showingResults = true
+    }
+
+    private var results: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("적용한 여행 취향").font(.title2.bold()).accessibilityAddTraits(.isHeader)
+                Text([preference.region?.title, preference.duration?.title, preference.theme?.title,
+                      preference.dailyVisits?.title].compactMap { $0 }.joined(separator: " · "))
+                    .accessibilityIdentifier("personalized-conditions")
+                Button("조건 수정") {
+                    editing = true
+                    showingResults = false
+                }
+                .buttonStyle(.bordered).controlSize(.large)
+
+                if case .failure = catalog {
+                    status("코스 데이터를 불러올 수 없어요", detail: "등록 코스를 읽지 못했어요. 잠시 후 다시 열어 주세요.")
+                } else if inputError == .missingAnswers {
+                    status("답변이 누락되었어요", detail: "조건 수정에서 네 가지 답변을 확인해 주세요.")
+                } else if inputError == .unsupportedRegion {
+                    status("선택한 지역을 확인할 수 없어요", detail: "현재 등록 코스와 연결할 수 없는 지역이에요. 조건을 수정해 주세요.")
+                } else if case .success(let courses) = catalog, courses.isEmpty {
+                    status("등록된 코스가 없어요", detail: "코스 데이터가 준비되면 다시 확인해 주세요.")
+                } else if matches.isEmpty {
+                    status("조건에 맞는 등록 코스가 아직 없어요", detail: "지역·기간·분위기가 모두 일치하는 코스만 표시해요. 조건을 자동으로 바꾸지 않아요.")
+                        .accessibilityIdentifier("personalized-empty")
+                } else {
+                    Text("추천 코스 \(matches.count)개").font(.headline)
+                    Text("방문 수는 참고 정보예요. 식당·카페를 포함한 완성 일정은 아니며, 등록된 모든 장소를 그대로 가져와요.")
+                        .font(.subheadline).readableSecondaryForeground()
+                    ForEach(matches) { match in
+                        NavigationLink {
+                            RecommendedCourseDetailView(course: match.course, onImported: onImported)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 12) {
+                                RecommendedCourseHeading(course: match.course)
+                                Text(match.course.summary).font(.subheadline)
+                                ForEach(match.reasons, id: \.self) { Text($0).font(.subheadline) }
+                                ForEach(match.dailyVisits, id: \.self) { Text($0).font(.subheadline) }
+                            }
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(16)
+                            .background(Color(uiColor: .secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("personalized-course-\(match.id)")
+                    }
+                }
+                Button("모든 코스 둘러보기") { browsing = true }
+                    .buttonStyle(.bordered).controlSize(.large)
+            }
+            .padding(20)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("취향 추천 코스")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func status(_ title: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.headline).accessibilityAddTraits(.isHeader)
+            Text(detail).font(.subheadline).readableSecondaryForeground()
         }
     }
 }

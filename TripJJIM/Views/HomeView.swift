@@ -73,7 +73,10 @@ struct HomeView: View {
                     }
                 }
             case .preferences:
-                TravelPreferenceOnboardingView { _ in }
+                PersonalizedRecommendationFlow {
+                    importedTripID = $0
+                    self.destination = nil
+                }
             case .createTrip:
                 TripEditorView(trip: nil) { _ in
                     didCreateTrip = true
