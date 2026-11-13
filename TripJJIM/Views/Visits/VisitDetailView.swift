@@ -102,25 +102,8 @@ struct VisitDetailView: View {
 }
 
 #Preview("방문 일정 상세") {
-    let visit = Visit(
-        placeName: "제주 동문시장",
-        visitDate: .now,
-        coordinate: PlaceCoordinate(latitude: 33.5125, longitude: 126.5261),
-        address: "제주특별자치도 제주시 관덕로14길 20",
-        memo: "점심 먹기\n시장 구경하기"
-    )
-    let trip = Trip(name: "제주 여행", visits: [visit], region: "제주")
-
-    let defaults = UserDefaults(suiteName: "TripJJIM.VisitDetailPreview")!
-    let store = {
-        if let data = try? JSONEncoder().encode([trip]) {
-            defaults.set(data, forKey: "tripjjim.trips")
-        }
-        return TripStore(defaults: defaults)
-    }()
-
     NavigationStack {
-        VisitDetailView(tripID: trip.id, visitID: visit.id) {}
+        VisitDetailView(tripID: PreviewData.trip.id, visitID: PreviewData.marketVisit.id) {}
     }
-    .environment(store)
+    .environment(PreviewData.makeStore())
 }

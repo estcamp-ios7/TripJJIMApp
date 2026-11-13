@@ -116,3 +116,8 @@ struct RecommendedCourseImportView: View {
         }
     }
 }
+
+#Preview("추천 코스 가져오기") {
+    RecommendedCourseImportView(course: PreviewData.course) { _ in }
+        .environment(PreviewData.makeStore(trips: []))
+}

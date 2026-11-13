@@ -289,3 +289,13 @@ private struct TripRegionSearchView: View {
         TripRegionSearchView { _ in }
     }
 }
+
+#Preview("여행 만들기") {
+    TripEditorView(trip: nil) { _ in }
+        .environment(PreviewData.makeStore(trips: []))
+}
+
+#Preview("여행 수정") {
+    TripEditorView(trip: PreviewData.trip) { _ in }
+        .environment(PreviewData.makeStore())
+}
