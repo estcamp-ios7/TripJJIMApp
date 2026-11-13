@@ -65,7 +65,9 @@ struct HomeView: View {
         .sheet(item: $destination, onDismiss: finishTripCreation) { destination in
             switch destination {
             case .recommendations:
-                preparationSheet("추천 여행 기능을 준비 중이에요.", symbol: "water.waves")
+                NavigationStack {
+                    RecommendedCourseListView()
+                }
             case .preferences:
                 preparationSheet("취향에 맞는 여행 계획 기능을 준비 중이에요.", symbol: "mountain.2")
             case .createTrip:

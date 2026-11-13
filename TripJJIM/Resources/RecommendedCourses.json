@@ -1,0 +1,147 @@
+[
+  {
+    "id": "jeju-seongsan",
+    "title": "제주 성산의 해안 풍경",
+    "summary": "성산일출봉과 바닷길을 따라 제주 동쪽의 화산 지형을 둘러보세요.",
+    "region": "제주 서귀포시 성산읍",
+    "theme": "nature",
+    "days": [
+      {
+        "number": 1,
+        "summary": "성산일출봉에서 광치기해변까지 이어지는 해안 일정이에요.",
+        "places": [
+          {
+            "id": "seongsan",
+            "name": "성산일출봉",
+            "area": "성산읍 일출로 284-12",
+            "order": 1,
+            "category": "attraction",
+            "reason": "바다 위로 솟은 화산체의 모습을 가까이에서 볼 수 있어요.",
+            "source": "https://www.visitjeju.net/kr/detail/view?contentsid=CONT_000000000500349",
+            "coordinate": {
+              "latitude": 33.45777777777778,
+              "longitude": 126.94222222222223
+            },
+            "coordinateSource": "https://whc.unesco.org/en/list/1264/maps/",
+            "suggestedTime": "오전"
+          },
+          {
+            "id": "gwangchigi",
+            "name": "광치기해변",
+            "area": "성산읍 고성리",
+            "order": 2,
+            "category": "attraction",
+            "reason": "해변에서 성산일출봉이 바다와 만나는 모습을 바라보세요.",
+            "source": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018413"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "summary": "성산읍 남쪽 해안에서 여유롭게 산책해요.",
+        "places": [
+          {
+            "id": "seopjikoji",
+            "name": "섭지코지",
+            "area": "성산읍 섭지코지로 262",
+            "order": 1,
+            "category": "attraction",
+            "reason": "해안 산책로에서 바위 절벽과 등대 풍경을 함께 즐겨 보세요.",
+            "source": "https://www.visitjeju.net/kr/detail/view?contentsid=CONT_000000000500343"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "busan-haeundae",
+    "title": "해운대 바다와 동백섬",
+    "summary": "도시 해변에서 출발해 동백섬의 해안 산책로를 걸어 보세요.",
+    "region": "부산 해운대구",
+    "theme": "coast",
+    "days": [
+      {
+        "number": 1,
+        "summary": "해운대 백사장에서 동백섬 방향으로 걸어요.",
+        "places": [
+          {
+            "id": "haeundae",
+            "name": "해운대해수욕장",
+            "area": "해운대구 해운대해변로 264",
+            "order": 1,
+            "category": "attraction",
+            "reason": "백사장을 따라 바다와 도심의 스카이라인을 한눈에 볼 수 있어요.",
+            "source": "https://www.visitbusan.net/index.do?contentsSid=22&lang_cd=ko&uc_seq=373",
+            "coordinate": {
+              "latitude": 35.158474,
+              "longitude": 129.15987
+            },
+            "coordinateSource": "https://www.visitbusan.net/index.do?contentsSid=22&lang_cd=ko&uc_seq=373"
+          },
+          {
+            "id": "dongbaek",
+            "name": "동백섬·누리마루 APEC하우스",
+            "area": "해운대구 우동 동백섬 일대",
+            "order": 2,
+            "category": "attraction",
+            "reason": "동백섬의 해안길을 걸으며 누리마루와 바다 전망을 만나 보세요.",
+            "source": "https://www.visitbusan.net/index.do?contentsSid=22&lang_cd=ko&uc_seq=284",
+            "coordinate": {
+              "latitude": 35.151962,
+              "longitude": 129.15263
+            },
+            "coordinateSource": "https://www.visitbusan.net/index.do?contentsSid=22&lang_cd=ko&uc_seq=284"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "busan-old-town",
+    "title": "부산 원도심 영화와 시장",
+    "summary": "영화제의 흔적을 둘러보고 가까운 전통시장에서 먹거리를 찾아보세요.",
+    "region": "부산 중구 남포동·광복동",
+    "theme": "culture",
+    "days": [
+      {
+        "number": 1,
+        "summary": "남포동의 광장과 시장을 한날에 둘러봐요.",
+        "places": [
+          {
+            "id": "biff",
+            "name": "BIFF광장",
+            "area": "중구 남포동 일대",
+            "order": 1,
+            "category": "culture",
+            "reason": "영화인들의 손도장이 새겨진 거리를 살펴보고 광장 주변 간식도 찾아보세요.",
+            "source": "https://www.visitbusan.net/archive/dataSearch/view.nm?dataSid=METADATA011938&menuCd=36"
+          },
+          {
+            "id": "gukje",
+            "name": "국제시장",
+            "area": "중구 광복동 일대",
+            "order": 2,
+            "category": "market",
+            "reason": "여러 골목으로 이어지는 시장을 걸으며 부산의 오래된 상권을 느껴 보세요.",
+            "source": "https://www.visitbusan.net/index.do?contentsSid=22&lang_cd=ko&uc_seq=332"
+          },
+          {
+            "id": "jagalchi",
+            "name": "자갈치시장",
+            "area": "중구 자갈치해안로 52",
+            "order": 3,
+            "category": "market",
+            "reason": "수산시장 풍경을 둘러보고 해산물 식사를 즐겨 보세요.",
+            "source": "https://www.visitbusan.net/index.do?contentsSid=22&lang_cd=ko&uc_seq=412",
+            "coordinate": {
+              "latitude": 35.096664,
+              "longitude": 129.03055
+            },
+            "coordinateSource": "https://www.visitbusan.net/index.do?contentsSid=22&lang_cd=ko&uc_seq=412",
+            "suggestedTime": "점심"
+          }
+        ]
+      }
+    ]
+  }
+]
