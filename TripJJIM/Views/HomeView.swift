@@ -28,15 +28,14 @@ struct HomeView: View {
                 featureCard(
                     "추천 여행 둘러보기",
                     description: "미리 준비된 여행 코스에서 마음에 드는 일정을 선택해 보세요.",
-                    symbol: "water.waves",
-                    colors: [.blue, .cyan],
+                    imageName: "HomeRecommendedTravel",
+                    imageAlignment: .bottom,
                     destination: .recommendations
                 )
                 featureCard(
                     "내 취향으로 계획하기",
                     description: "간단한 질문으로 나에게 맞는 여행 일정을 만들어 보세요.",
-                    symbol: "mountain.2.fill",
-                    colors: [.teal, .mint],
+                    imageName: "HomePersonalizedTravel",
                     destination: .preferences
                 )
 
@@ -61,11 +60,14 @@ struct HomeView: View {
             .padding(20)
             .frame(maxWidth: .infinity)
         }
+        .contentMargins(.bottom, 12, for: .scrollContent)
         .background(Color(uiColor: .systemGroupedBackground))
         .sheet(item: $destination, onDismiss: finishTripCreation) { destination in
             switch destination {
             case .recommendations:
-                preparationSheet("추천 여행 기능을 준비 중이에요.", symbol: "water.waves")
+                NavigationStack {
+                    RecommendedCourseListView()
+                }
             case .preferences:
                 preparationSheet("취향에 맞는 여행 계획 기능을 준비 중이에요.", symbol: "mountain.2")
             case .createTrip:
@@ -80,25 +82,27 @@ struct HomeView: View {
     private func featureCard(
         _ title: String,
         description: String,
-        symbol: String,
-        colors: [Color],
+        imageName: String,
+        imageAlignment: Alignment = .center,
         destination: Destination
     ) -> some View {
         Button {
             self.destination = destination
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
-                    .aspectRatio(16 / 9, contentMode: .fit)
-                    .overlay {
-                        Image(systemName: symbol)
-                            .font(.system(size: 72, weight: .light))
-                            .foregroundStyle(.white.opacity(0.88))
+                Color.clear
+                    .aspectRatio(64.0 / 27.0, contentMode: .fit)
+                    .overlay(alignment: imageAlignment) {
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFill()
                     }
+                    .clipped()
                     .accessibilityHidden(true)
 
                 cardText(title, description: description)
-                    .padding(16)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(Color(uiColor: .secondarySystemGroupedBackground))
@@ -123,6 +127,7 @@ struct HomeView: View {
                 .readableSecondaryForeground()
         }
         .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func preparationSheet(_ title: String, symbol: String) -> some View {

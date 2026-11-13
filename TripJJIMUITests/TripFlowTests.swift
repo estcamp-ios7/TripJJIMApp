@@ -15,14 +15,9 @@ final class TripFlowTests: XCTestCase {
         XCTAssertTrue(heading.waitForExistence(timeout: 10))
         attachScreen("Home upper cards", in: app)
 
-        for (identifier, title) in [
-            ("home-recommendations", "추천 여행 기능을 준비 중이에요."),
-            ("home-preferences", "취향에 맞는 여행 계획 기능을 준비 중이에요.")
-        ] {
-            app.buttons[identifier].tap()
-            XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5))
-            app.buttons["닫기"].tap()
-        }
+        app.buttons["home-preferences"].tap()
+        XCTAssertTrue(app.staticTexts["취향에 맞는 여행 계획 기능을 준비 중이에요."].waitForExistence(timeout: 5))
+        app.buttons["닫기"].tap()
 
         app.swipeUp()
         let create = app.buttons["home-create-trip"]
@@ -50,6 +45,38 @@ final class TripFlowTests: XCTestCase {
         XCTAssertTrue(heading.waitForExistence(timeout: 5))
         showTripList(in: app)
         deleteTrip(trip, in: app)
+    }
+
+    func testRecommendedCoursesFilterDetailsAndReturnHome() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["home-recommendations"].tap()
+        let beach = app.buttons["recommended-course-busan-haeundae"]
+        XCTAssertTrue(beach.waitForExistence(timeout: 10))
+        attachScreen("Recommended course list", in: app)
+
+        app.buttons["course-theme-coast"].tap()
+        XCTAssertFalse(app.buttons["recommended-course-jeju-seongsan"].exists)
+        XCTAssertFalse(app.buttons["recommended-course-busan-old-town"].exists)
+        beach.tap()
+        XCTAssertTrue(app.navigationBars["코스 상세"].waitForExistence(timeout: 5))
+        let first = app.descendants(matching: .any)["course-place-haeundae"].firstMatch
+        let second = app.descendants(matching: .any)["course-place-dongbaek"].firstMatch
+        XCTAssertTrue(first.exists)
+        XCTAssertTrue(second.exists)
+        XCTAssertLessThan(first.frame.minY, second.frame.minY)
+        attachScreen("Recommended course itinerary", in: app)
+        app.swipeUp()
+        XCTAssertTrue(app.descendants(matching: .any)["recommended-course-map"].firstMatch.exists)
+        attachScreen("Recommended course map", in: app)
+
+        app.navigationBars["코스 상세"].buttons.firstMatch.tap()
+        XCTAssertTrue(beach.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["recommended-course-jeju-seongsan"].exists)
+        app.buttons["닫기"].tap()
+        XCTAssertTrue(app.buttons["home-recommendations"].waitForExistence(timeout: 5))
+        app.buttons["내 여행"].tap()
+        XCTAssertTrue(app.navigationBars["나의 여행"].waitForExistence(timeout: 5))
     }
 
     func testBulkDeleteTrips() {
@@ -630,5 +657,33 @@ final class ReminderModelTests: XCTestCase {
         XCTAssertEqual(visit.reminderBody, "새 카페 방문 10분 전입니다.")
         visit.selectedReminderPreset = .custom
         XCTAssertEqual(visit.reminderBody, "새 카페 일정 알림입니다.")
+    }
+}
+
+
+final class RecommendedCourseCatalogTests: XCTestCase {
+    func testBundledCoursesAndThemeFiltering() throws {
+        let courses = try RecommendedCourseCatalog.load(from: Bundle(for: Self.self))
+        XCTAssertGreaterThanOrEqual(courses.count, 3)
+        XCTAssertEqual(RecommendedCourseCatalog.matching(nil, in: courses).map(\.id), courses.map(\.id))
+        for theme in TravelTheme.allCases {
+            let filtered = RecommendedCourseCatalog.matching(theme, in: courses)
+            XCTAssertFalse(filtered.isEmpty)
+            XCTAssertTrue(filtered.allSatisfy { $0.theme == theme })
+        }
+        let jeju = try XCTUnwrap(courses.first { $0.id == "jeju-seongsan" })
+        XCTAssertEqual(jeju.duration, "1박 2일")
+        XCTAssertEqual(jeju.days.map(\.number), [1, 2])
+        XCTAssertEqual(jeju.days.first?.places.map(\.order), [1, 2])
+        XCTAssertNil(jeju.days.last?.places.first?.coordinate)
+        XCTAssertTrue(jeju.days.first?.places.first?.coordinateSource != nil)
+    }
+
+    func testRejectsDuplicateCoursesAndMalformedJSON() throws {
+        let courses = try RecommendedCourseCatalog.load(from: Bundle(for: Self.self))
+        let course = try XCTUnwrap(courses.first)
+        let duplicates = try JSONEncoder().encode([course, course])
+        XCTAssertThrowsError(try RecommendedCourseCatalog.decode(duplicates))
+        XCTAssertThrowsError(try RecommendedCourseCatalog.decode(Data("{".utf8)))
     }
 }
