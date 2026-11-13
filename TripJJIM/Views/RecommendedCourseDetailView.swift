@@ -175,7 +175,7 @@ struct RecommendedCourseAction: View {
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(
-                Color.tripAccent.mix(with: .black, by: 0.38)
+                Color.tripAccent
                     .opacity(isEnabled || isWorking ? 1 : 0.48),
                 in: .rect(cornerRadius: 16)
             )

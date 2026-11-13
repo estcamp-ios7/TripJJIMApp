@@ -32,6 +32,9 @@ struct RecommendedCourseImportView: View {
                     DatePicker("시작일", selection: $startDate, displayedComponents: .date)
                         .accessibilityIdentifier("course-import-start")
                     LabeledContent("종료일", value: endDate?.dayLabel ?? "계산할 수 없어요")
+                    Text("종료일은 추천 코스의 여행 기간에 따라 자동으로 설정돼요.")
+                        .font(.footnote)
+                        .readableSecondaryForeground()
                     LabeledContent("여행 기간") {
                         Text(endDate == nil ? "계산할 수 없어요" : course.duration)
                             .fontWeight(.semibold)
