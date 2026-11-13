@@ -44,13 +44,61 @@ final class TripFlowTests: XCTestCase {
         app.buttons["답변 수정 완료"].tap()
         XCTAssertTrue(app.buttons["preference-edit-2"].label.contains("2박 3일"))
         attachScreen("Preference summary", in: app)
-        app.buttons["취향 확인 완료"].tap()
+        app.buttons["추천 코스 보기"].tap()
+        XCTAssertTrue(app.staticTexts["personalized-empty"].waitForExistence(timeout: 5)
+                      || app.otherElements["personalized-empty"].exists)
+        attachScreen("P2 empty result", in: app)
+        app.buttons["모든 코스 둘러보기"].tap()
+        XCTAssertTrue(app.buttons["recommended-course-busan-haeundae"].waitForExistence(timeout: 5))
+        app.navigationBars["추천 여행 코스"].buttons["닫기"].tap()
+        app.buttons["조건 수정"].tap()
+        app.buttons["preference-edit-2"].tap()
+        app.buttons["1박 2일"].tap()
+        app.buttons["답변 수정 완료"].tap()
+        app.buttons["추천 코스 보기"].tap()
+        let result = app.buttons["personalized-course-jeju-seongsan"]
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        attachScreen("P2 matching result", in: app)
+        result.tap()
+        XCTAssertTrue(app.navigationBars["코스 상세"].waitForExistence(timeout: 5))
+        app.navigationBars["코스 상세"].buttons.firstMatch.tap()
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        app.buttons["preference-close"].tap()
         XCTAssertTrue(homeCard.waitForExistence(timeout: 5))
-
         homeCard.tap()
         XCTAssertFalse(next.isEnabled)
         app.buttons["preference-close"].tap()
         XCTAssertTrue(homeCard.waitForExistence(timeout: 5))
+    }
+
+    func testPersonalizedCourseImport() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["home-preferences"].tap()
+        app.buttons["부산"].tap()
+        app.buttons["다음"].tap()
+        app.buttons["당일 여행"].tap()
+        app.buttons["다음"].tap()
+        app.buttons["바다·도시"].tap()
+        app.buttons["다음"].tap()
+        app.buttons["5곳 이상"].tap()
+        app.buttons["다음"].tap()
+        app.buttons["추천 코스 보기"].tap()
+        let result = app.buttons["personalized-course-busan-haeundae"]
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        XCTAssertTrue(result.label.contains("선택한 5곳 이상과 달라요"))
+        attachScreen("P2 visit count difference", in: app)
+        result.tap()
+        app.buttons["start-course-import"].tap()
+        let suffix = " P2 " + String(UUID().uuidString.prefix(6))
+        let title = "해운대 바다와 동백섬" + suffix
+        let field = app.textFields["course-import-title"]
+        field.tap()
+        field.typeText(suffix)
+        app.buttons["save-imported-course"].tap()
+        XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10))
+        showTripList(in: app)
+        deleteTrip(title, in: app)
     }
 
     func testHomePlanningRoutesAndTripCreation() {
@@ -834,5 +882,73 @@ final class TravelPreferenceTests: XCTestCase {
         XCTAssertEqual(TravelPreference.DailyVisits.threeToFour.bounds?.minimum, 3)
         XCTAssertEqual(TravelPreference.DailyVisits.fiveOrMore.bounds?.minimum, 5)
         XCTAssertNil(TravelPreference.DailyVisits.fiveOrMore.bounds?.maximum)
+    }
+}
+
+final class PersonalizedRecommendationTests: XCTestCase {
+    private func courses() throws -> [RecommendedCourse] {
+        try RecommendedCourseCatalog.load(from: Bundle(for: Self.self))
+    }
+
+    func testRequiredConditionsAndDensityIsAdvisory() throws {
+        let courses = try courses()
+        var p = TravelPreference(region: .selected("부산"), duration: .dayTrip, theme: .coast, dailyVisits: .fiveOrMore)
+        let matches = try PersonalizedRecommendation.evaluate(p, courses: courses)
+        XCTAssertEqual(matches.map(\.id), ["busan-haeundae"])
+        XCTAssertTrue(matches[0].dailyVisits[0].contains("2곳"))
+        XCTAssertTrue(matches[0].dailyVisits[0].contains("달라요"))
+        p.dailyVisits = .unspecified
+        let unspecified = try PersonalizedRecommendation.evaluate(p, courses: courses)
+        XCTAssertEqual(unspecified.map(\.id), matches.map(\.id))
+        XCTAssertEqual(unspecified[0].dailyVisits, ["1일차 등록 장소: 2곳"])
+        p.duration = .oneNight
+        XCTAssertTrue(try PersonalizedRecommendation.evaluate(p, courses: courses).isEmpty)
+        p.region = .selected("제주")
+        p.theme = .culture
+        XCTAssertTrue(try PersonalizedRecommendation.evaluate(p, courses: courses).isEmpty)
+        p.theme = .nature
+        p.dailyVisits = .threeToFour
+        let jeju = try PersonalizedRecommendation.evaluate(p, courses: courses)
+        XCTAssertEqual(jeju.map(\.id), ["jeju-seongsan"])
+        XCTAssertEqual(jeju[0].dailyVisits.count, 2) // Includes places without coordinates.
+        XCTAssertTrue(jeju[0].dailyVisits.allSatisfy { $0.contains("달라요") })
+    }
+
+    func testExplicitRegionsAndMissingInput() throws {
+        let courses = try courses()
+        var p = TravelPreference(region: .selected("부산광역시 해운대구"), duration: .dayTrip, theme: .culture, dailyVisits: .unspecified)
+        XCTAssertTrue(try PersonalizedRecommendation.evaluate(p, courses: courses).isEmpty)
+        for invalid in ["중구", "제주시", "제주특별자치도 제주시", "서울", "부산광역시 해운대구 우동"] {
+            p.region = .selected(invalid)
+            XCTAssertThrowsError(try PersonalizedRecommendation.evaluate(p, courses: courses)) {
+                XCTAssertEqual($0 as? PersonalizedRecommendation.InputError, .unsupportedRegion)
+            }
+        }
+        for alias in ["제주", "제주도", "제주특별자치도", "제주특별자치도 서귀포시 성산읍"] {
+            p.region = .selected(alias)
+            p.duration = .oneNight
+            p.theme = .nature
+            XCTAssertEqual(try PersonalizedRecommendation.evaluate(p, courses: courses).map(\.id), ["jeju-seongsan"])
+        }
+        p.region = nil
+        XCTAssertThrowsError(try PersonalizedRecommendation.evaluate(p, courses: courses)) {
+            XCTAssertEqual($0 as? PersonalizedRecommendation.InputError, .missingAnswers)
+        }
+    }
+
+    func testOrderAndDurationBoundaries() throws {
+        let original = try courses()[0]
+        func course(_ id: String, days: Int) -> RecommendedCourse {
+            RecommendedCourse(id: id, title: id, summary: "", region: "제주", theme: .nature, imageName: nil,
+                              days: (1...days).map { RecommendedCourseDay(number: $0, summary: nil, places: original.days[0].places) })
+        }
+        let input = [course("five", days: 5), course("one", days: 1), course("four", days: 4), course("three", days: 3)]
+        var p = TravelPreference(region: .undecided, duration: .threeNightsOrMore, theme: .nature, dailyVisits: .oneToTwo)
+        XCTAssertEqual(try PersonalizedRecommendation.evaluate(p, courses: input).map(\.id), ["five", "four"])
+        p.duration = .twoNights
+        XCTAssertEqual(try PersonalizedRecommendation.evaluate(p, courses: input).map(\.id), ["three"])
+        p.duration = .dayTrip
+        XCTAssertEqual(try PersonalizedRecommendation.evaluate(p, courses: input).map(\.id), ["one"])
+        XCTAssertTrue(try PersonalizedRecommendation.evaluate(p, courses: []).isEmpty)
     }
 }
